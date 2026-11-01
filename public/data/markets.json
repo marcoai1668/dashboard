@@ -1,0 +1,72 @@
+{
+  "timestamp": 1793564955080,
+  "source": "CNBC",
+  "generatedAt": "2026-11-01T20:29:15.081Z",
+  "markets": {
+    "HSI": {
+      "name": "Hang Seng Index",
+      "symbol": "HSI",
+      "currency": "HKD",
+      "price": 23294.42,
+      "previousClose": 22958.65,
+      "change": 335.77,
+      "changePercent": 1.46,
+      "dayHigh": 23400.02,
+      "dayLow": 22947.96,
+      "marketTime": "2026-10-30",
+      "source": "CNBC"
+    },
+    "SP500": {
+      "name": "S&P 500",
+      "symbol": "SPX",
+      "currency": "USD",
+      "price": 7580.07,
+      "previousClose": 7720.39,
+      "change": -140.32,
+      "changePercent": -1.82,
+      "dayHigh": 7637.48,
+      "dayLow": 7527.56,
+      "marketTime": "2026-10-30",
+      "source": "CNBC"
+    },
+    "NAS100": {
+      "name": "NASDAQ 100",
+      "symbol": "NDX",
+      "currency": "USD",
+      "price": 28384.845,
+      "previousClose": 29402.508,
+      "change": -1017.663,
+      "changePercent": -3.46,
+      "dayHigh": 28713.446,
+      "dayLow": 28093.245,
+      "marketTime": "2026-10-30",
+      "source": "CNBC"
+    },
+    "DOW30": {
+      "name": "Dow Jones Industrial",
+      "symbol": "DJI",
+      "currency": "USD",
+      "price": 51770.31,
+      "previousClose": 52342.56,
+      "change": -572.25,
+      "changePercent": -1.09,
+      "dayHigh": 52383.9,
+      "dayLow": 51563.76,
+      "marketTime": "2026-10-30",
+      "source": "CNBC"
+    },
+    "GOLD": {
+      "name": "Gold Futures",
+      "symbol": "GC=F",
+      "currency": "USD",
+      "price": 3898.9,
+      "previousClose": 3898.9,
+      "change": 0,
+      "changePercent": 0,
+      "dayHigh": 0,
+      "dayLow": 0,
+      "marketTime": "2026-10-31",
+      "source": "CNBC"
+    }
+  }
+}

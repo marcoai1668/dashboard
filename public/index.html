@@ -1,0 +1,1166 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-HK">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>主頁儀表板</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#9728;</text></svg>">
+<style>
+:root {
+  --bg-gradient-start: #1a1a2e;
+  --bg-gradient-end: #16213e;
+  --card-bg: rgba(255, 255, 255, 0.08);
+  --card-border: rgba(255, 255, 255, 0.12);
+  --card-hover: rgba(255, 255, 255, 0.12);
+  --text-primary: rgba(255, 255, 255, 0.95);
+  --text-secondary: rgba(255, 255, 255, 0.6);
+  --text-tertiary: rgba(255, 255, 255, 0.4);
+  --accent-blue: #0A84FF;
+  --accent-green: #30D158;
+  --accent-red: #FF453A;
+  --accent-orange: #FF9F0A;
+  --accent-purple: #BF5AF2;
+  --radius: 20px;
+  --blur: 40px;
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI',
+               'PingFang HK', 'PingFang TC', 'Microsoft JhengHei', 'Noto Sans HK', sans-serif;
+  background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+  background-attachment: fixed;
+  min-height: 100vh;
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  /* 內容比視窗矮時垂直居中，避免底部一大片空白；內容過高時自動靠上 */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: safe center;
+  /* 底部留白比頂部多，令內容整體上移，減少頂部空位 */
+  padding-bottom: 12vh;
+}
+
+body::before {
+  content: '';
+  position: fixed; top: -20%; left: -10%;
+  width: 60%; height: 60%;
+  background: radial-gradient(circle, rgba(10,132,255,0.08) 0%, transparent 70%);
+  pointer-events: none; z-index: 0;
+}
+body::after {
+  content: '';
+  position: fixed; bottom: -20%; right: -10%;
+  width: 60%; height: 60%;
+  background: radial-gradient(circle, rgba(191,90,242,0.06) 0%, transparent 70%);
+  pointer-events: none; z-index: 0;
+}
+
+/* ===== 頂部 ===== */
+.header {
+  position: relative; z-index: 1;
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 16px 32px 10px;
+  width: 100%; max-width: 1320px;
+}
+.header-left h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
+.header-left p { font-size: 15px; color: var(--text-secondary); margin-top: 2px; }
+.header-right { display: flex; align-items: center; gap: 12px; }
+
+.status-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 11px; font-weight: 600;
+  padding: 5px 11px; border-radius: 20px;
+  background: rgba(48,209,88,0.15); color: var(--accent-green);
+  border: 1px solid rgba(48,209,88,0.25);
+  transition: var(--transition);
+  white-space: nowrap;
+}
+.status-pill.offline {
+  background: rgba(255,159,10,0.15); color: var(--accent-orange);
+  border-color: rgba(255,159,10,0.25);
+}
+.status-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 8px currentColor;
+}
+.status-pill.offline .status-dot { animation: pulse 1.6s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.25} }
+
+.header-clock {
+  font-size: 15px; color: var(--text-secondary);
+  font-variant-numeric: tabular-nums; font-weight: 500;
+}
+
+.settings-btn {
+  background: var(--card-bg); border: 1px solid var(--card-border);
+  border-radius: 50%; width: 36px; height: 36px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: var(--transition);
+  backdrop-filter: blur(var(--blur)); color: var(--text-primary); font-size: 18px;
+}
+.settings-btn:hover { background: var(--card-hover); transform: scale(1.05); }
+
+/* ===== 提示橫幅 ===== */
+.alert-banner {
+  position: relative; z-index: 2;
+  display: none;
+  margin: 0 40px 4px;
+  padding: 14px 18px;
+  border-radius: 14px;
+  background: rgba(255,159,10,0.12);
+  border: 1px solid rgba(255,159,10,0.3);
+  font-size: 13.5px; line-height: 1.7;
+  color: rgba(255,255,255,0.9);
+}
+.alert-banner.show { display: block; }
+.alert-banner strong { color: var(--accent-orange); }
+.alert-banner code {
+  background: rgba(0,0,0,0.35);
+  padding: 2px 7px; border-radius: 5px;
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 12.5px; color: #7FD4FF;
+}
+.alert-banner .banner-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+.banner-btn {
+  background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.18);
+  color: var(--text-primary); font-size: 12.5px; font-weight: 600;
+  padding: 6px 14px; border-radius: 8px; cursor: pointer;
+  transition: var(--transition); font-family: inherit;
+}
+.banner-btn:hover { background: rgba(255,255,255,0.2); }
+
+/* ===== 版面 ===== */
+.dashboard {
+  position: relative; z-index: 1;
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 14px; padding: 10px 32px 28px;
+  width: 100%; max-width: 1320px;
+}
+
+.card {
+  background: var(--card-bg);
+  backdrop-filter: blur(var(--blur)); -webkit-backdrop-filter: blur(var(--blur));
+  border: 1px solid var(--card-border);
+  border-radius: 18px; padding: 18px 20px;
+  transition: var(--transition);
+  position: relative; overflow: hidden;
+  min-height: 196px; display: flex; flex-direction: column;
+}
+.card:hover {
+  background: var(--card-hover);
+  border-color: rgba(255,255,255,0.2);
+  transform: translateY(-2px);
+}
+
+.card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.card-title {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; font-weight: 600; color: var(--text-secondary);
+  letter-spacing: 1px;
+}
+.card-icon { font-size: 16px; }
+.card-refresh {
+  background: transparent; border: none; color: var(--text-tertiary);
+  cursor: pointer; font-size: 14px; transition: var(--transition);
+  padding: 4px 8px; border-radius: 8px;
+  display: flex; align-items: center; gap: 4px;
+}
+.card-refresh:hover { color: var(--text-primary); background: rgba(255,255,255,0.06); }
+.card-refresh.spinning .refresh-icon { animation: spin 0.8s linear infinite; }
+@keyframes spin { from{transform:rotate(0)} to{transform:rotate(360deg)} }
+
+.card-content { flex: 1; display: flex; flex-direction: column; }
+.card-updated { font-size: 10.5px; color: var(--text-tertiary); margin-top: 8px; text-align: right; }
+
+/* 空白／錯誤狀態 */
+.card-state {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 8px; text-align: center; padding: 16px 4px;
+}
+.card-state-icon { font-size: 26px; opacity: 0.55; }
+.card-state-text { font-size: 12.5px; color: var(--text-tertiary); line-height: 1.7; }
+.card-state-text b { color: var(--text-secondary); font-weight: 600; }
+
+/* ===== 天氣 ===== */
+.weather-current { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 12px; }
+.weather-icon { font-size: 44px; line-height: 1; }
+.weather-temp { display: flex; align-items: baseline; gap: 2px; }
+.weather-temp .temp-value { font-size: 40px; font-weight: 300; letter-spacing: -1px; }
+.weather-temp .temp-unit { font-size: 17px; font-weight: 300; color: var(--text-secondary); }
+.weather-desc { font-size: 13px; color: var(--text-secondary); margin-top: 2px; }
+.weather-details { display: flex; gap: 18px; font-size: 13px; }
+.weather-detail-item { display: flex; flex-direction: column; gap: 1px; }
+.weather-detail-label { color: var(--text-tertiary); font-size: 10.5px; }
+.weather-detail-value { color: var(--text-primary); font-weight: 500; font-size: 13px; }
+
+/* 今日高低温／降雨機率：填補卡片底部空白 */
+.weather-today {
+  display: flex; gap: 16px; align-items: center;
+  margin-top: auto; padding-top: 10px;
+  border-top: 1px solid rgba(255,255,255,0.07);
+  font-size: 12px; color: var(--text-secondary);
+}
+.weather-today b { color: var(--text-primary); font-weight: 600; }
+.weather-today .wt-sep { color: var(--text-tertiary); }
+
+/* ===== 預報 ===== */
+.forecast-list { display: flex; gap: 3px; overflow-x: auto; padding-bottom: 2px; margin: auto 0; }
+.forecast-list::-webkit-scrollbar { height: 4px; }
+.forecast-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
+.forecast-day { flex: 1; min-width: 0; text-align: center; padding: 8px 2px; border-radius: 10px; transition: var(--transition); }
+.forecast-day:hover { background: rgba(255,255,255,0.06); }
+.forecast-day .day-name { font-size: 10px; color: var(--text-tertiary); margin-bottom: 6px; white-space: nowrap; }
+.forecast-day .day-icon { font-size: 22px; margin-bottom: 6px; }
+.forecast-day .day-temps { font-size: 11px; font-weight: 500; }
+.forecast-day .day-high { color: var(--text-primary); }
+.forecast-day .day-low { color: var(--text-tertiary); }
+.forecast-day .day-precip { font-size: 9px; color: var(--accent-blue); margin-top: 3px; }
+.forecast-day.today { background: rgba(10,132,255,0.15); }
+
+/* ===== 匯率 ===== */
+.exchange-list { display: flex; flex-direction: column; gap: 10px; flex: 1; justify-content: center; }
+.exchange-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.exchange-item:last-child { border-bottom: none; }
+.exchange-currency { display: flex; align-items: center; gap: 10px; }
+.exchange-flag { font-size: 24px; }
+.exchange-info { display: flex; flex-direction: column; }
+.exchange-code { font-size: 15px; font-weight: 600; }
+.exchange-name { font-size: 11px; color: var(--text-tertiary); }
+.exchange-value { text-align: right; }
+.exchange-rate { font-size: 18px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.exchange-unit { font-size: 11px; color: var(--text-tertiary); }
+
+/* ===== 假期 ===== */
+.holiday-main { text-align: center; padding: 2px 0; }.holiday-countdown {
+  font-size: 46px; font-weight: 200; letter-spacing: -2px; line-height: 1;
+  background: linear-gradient(135deg, var(--accent-orange), var(--accent-purple));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.holiday-days-label { font-size: 13px; color: var(--text-secondary); margin-top: 2px; }
+.holiday-name { font-size: 16px; font-weight: 600; margin-top: 8px; }
+.holiday-date { font-size: 12px; color: var(--text-tertiary); margin-top: 2px; }
+.holiday-type-badge { display: inline-block; font-size: 10px; padding: 2px 8px; border-radius: 8px; margin-top: 6px; }
+.holiday-upcoming { margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 8px; }
+.holiday-upcoming-item { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-tertiary); padding: 2px 0; }
+
+/* ===== 日出日落 ===== */
+.sun-card { justify-content: center; align-items: center; }
+.sun-card .card-content { justify-content: center; }
+.sun-arc-container { position: relative; width: 100%; height: 84px; display: flex; justify-content: center; align-items: flex-end; margin: 4px 0 0; }
+.sun-arc { width: 168px; height: 84px; position: relative; }
+.sun-arc svg { width: 100%; height: 100%; }
+.sun-dot {
+  position: absolute; width: 14px; height: 14px;
+  background: var(--accent-orange); border-radius: 50%;
+  box-shadow: 0 0 20px rgba(255,159,10,0.6);
+  transform: translate(-50%, -50%); transition: all 0.5s ease;
+}
+.sun-times { display: flex; justify-content: space-between; width: 100%; max-width: 210px; margin-top: 6px; }
+.sun-time { text-align: center; }
+.sun-time-icon { font-size: 17px; margin-bottom: 2px; }
+.sun-time-value { font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.sun-time-label { font-size: 10.5px; color: var(--text-tertiary); margin-top: 1px; }
+.sun-duration { text-align: center; margin-top: 8px; }
+.sun-duration-value { font-size: 13px; color: var(--text-secondary); }
+
+/* ===== 市場 ===== */
+.markets-list { display: flex; flex-direction: column; gap: 4px; flex: 1; justify-content: center; }
+.market-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.market-item:last-child { border-bottom: none; }
+.market-info { display: flex; flex-direction: column; gap: 1px; }
+.market-name { font-size: 13px; font-weight: 600; }
+.market-symbol { font-size: 10px; color: var(--text-tertiary); }
+.market-data { text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+.market-price { font-size: 16px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.market-change { font-size: 12px; font-weight: 500; font-variant-numeric: tabular-nums; display: flex; align-items: center; gap: 3px; }
+/* 升＝綠色、跌＝紅色（西式慣例） */
+.market-change.up { color: var(--accent-green); }
+.market-change.down { color: var(--accent-red); }
+.market-change.flat { color: var(--text-tertiary); }
+
+/* ===== 設定 ===== */
+.settings-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.5); backdrop-filter: blur(10px);
+  z-index: 100; display: none; align-items: center; justify-content: center;
+}
+.settings-overlay.active { display: flex; }
+.settings-modal {
+  background: rgba(30,30,50,0.92); backdrop-filter: blur(40px);
+  border: 1px solid var(--card-border); border-radius: 24px;
+  padding: 32px; width: 90%; max-width: 480px; max-height: 80vh; overflow-y: auto;
+}
+.settings-modal h2 { font-size: 20px; margin-bottom: 20px; }
+.settings-section { margin-bottom: 20px; }
+.settings-section h3 { font-size: 13px; color: var(--text-secondary); letter-spacing: 1px; margin-bottom: 10px; }
+.settings-option { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.06); }
+.settings-option label { font-size: 14px; }
+.settings-option select, .settings-option input {
+  background: rgba(255,255,255,0.1); border: 1px solid var(--card-border);
+  border-radius: 8px; color: var(--text-primary); padding: 6px 12px; font-size: 14px; outline: none;
+  font-family: inherit;
+}
+.settings-option select:focus, .settings-option input:focus { border-color: var(--accent-blue); }
+.toggle { position: relative; width: 44px; height: 26px; background: rgba(255,255,255,0.1); border-radius: 13px; cursor: pointer; transition: var(--transition); flex-shrink: 0; }
+.toggle.active { background: var(--accent-green); }
+.toggle::after { content: ''; position: absolute; top: 2px; left: 2px; width: 22px; height: 22px; background: white; border-radius: 50%; transition: var(--transition); }
+.toggle.active::after { left: 20px; }
+.settings-close {
+  background: var(--accent-blue); color: white; border: none; border-radius: 12px;
+  padding: 10px 24px; font-size: 15px; font-weight: 600; cursor: pointer;
+  transition: var(--transition); width: 100%; margin-top: 8px; font-family: inherit;
+}
+.settings-close:hover { opacity: 0.9; }
+.settings-attribution { text-align: center; font-size: 11px; color: var(--text-tertiary); margin-top: 16px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.06); }
+.settings-attribution a { color: var(--accent-blue); text-decoration: none; }
+
+/* ===== 淺色主題修正 ===== */
+body[data-theme="light"] .alert-banner { color: rgba(0,0,0,0.82); background: rgba(255,159,10,0.14); }
+body[data-theme="light"] .alert-banner code { background: rgba(0,0,0,0.08); color: #0066CC; }
+body[data-theme="light"] .banner-btn { background: rgba(0,0,0,0.06); border-color: rgba(0,0,0,0.12); color: rgba(0,0,0,0.8); }
+body[data-theme="light"] .banner-btn:hover { background: rgba(0,0,0,0.11); }
+body[data-theme="light"] .settings-modal { background: rgba(250,250,252,0.97); }
+body[data-theme="light"] .settings-option select,
+body[data-theme="light"] .settings-option input { background: rgba(0,0,0,0.05); color: rgba(0,0,0,0.85); }
+body[data-theme="light"] .settings-option,
+body[data-theme="light"] .settings-attribution { border-color: rgba(0,0,0,0.08); }
+body[data-theme="light"] .card-state-text code { background: rgba(0,0,0,0.06); color: #0066CC; padding: 1px 5px; border-radius: 4px; }
+
+/* ===== 響應式 ===== */
+@media (max-width: 1024px) { .dashboard { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 700px) {
+  .dashboard { grid-template-columns: 1fr; padding: 16px; }
+  .header { padding: 20px 16px 12px; flex-direction: column; align-items: flex-start; gap: 10px; }
+  .alert-banner { margin: 0 16px 4px; }
+  .header-right { width: 100%; justify-content: space-between; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%);
+  background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 8px;
+}
+@keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+.fade-in { animation: fadeIn 0.5s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <h1 id="greeting">儀表板</h1>
+    <p id="dateString"></p>
+  </div>
+  <div class="header-right">
+    <span class="status-pill" id="statusPill"><span class="status-dot"></span><span id="statusText">連線中</span></span>
+    <span class="header-clock" id="clock"></span>
+    <button class="settings-btn" onclick="toggleSettings()" title="設定">&#9881;</button>
+  </div>
+</div>
+
+<div class="alert-banner" id="alertBanner">
+  <div id="alertText"></div>
+  <div class="banner-actions">
+    <button class="banner-btn" onclick="reconnectAll()">重新連線</button>
+    <button class="banner-btn" onclick="window.open('http://localhost:3000','_self')">前往 localhost:3000</button>
+  </div>
+</div>
+
+<div class="dashboard">
+  <!-- 卡一：即時天氣 -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title"><span class="card-icon">&#9728;&#65039;</span> 列治文天氣</div>
+      <button class="card-refresh" onclick="refreshCard('weather', this)" title="手動更新"><span class="refresh-icon">&#8635;</span></button>
+    </div>
+    <div class="card-content" id="weather-content">
+      <div class="weather-current">
+        <div class="weather-icon" id="weather-icon">&#9728;&#65039;</div>
+        <div>
+          <div class="weather-temp">
+            <span class="temp-value" id="weather-temp">--</span>
+            <span class="temp-unit" id="weather-unit">&#176;C</span>
+          </div>
+          <div class="weather-desc" id="weather-desc">載入中…</div>
+        </div>
+      </div>
+      <div class="weather-details">
+        <div class="weather-detail-item"><span class="weather-detail-label">體感溫度</span><span class="weather-detail-value" id="weather-feels">--</span></div>
+        <div class="weather-detail-item"><span class="weather-detail-label">濕度</span><span class="weather-detail-value" id="weather-humidity">--</span></div>
+        <div class="weather-detail-item"><span class="weather-detail-label">風速</span><span class="weather-detail-value" id="weather-wind">--</span></div>
+      </div>
+      <div class="weather-today" id="weather-today"></div>
+    </div>
+    <div class="card-updated" id="weather-updated">--</div>
+  </div>
+
+  <!-- 卡二：九日預報 -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title"><span class="card-icon">&#127780;&#65039;</span> 九日天氣預報</div>
+      <button class="card-refresh" onclick="refreshCard('forecast', this)" title="手動更新"><span class="refresh-icon">&#8635;</span></button>
+    </div>
+    <div class="card-content">
+      <div class="forecast-list" id="forecast-list">
+        <div class="skeleton" style="height:80px;flex:1"></div>
+      </div>
+    </div>
+    <div class="card-updated" id="forecast-updated">--</div>
+  </div>
+
+  <!-- 卡三：匯率 -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title"><span class="card-icon">&#128176;</span> 港幣匯率</div>
+      <button class="card-refresh" onclick="refreshCard('exchange', this)" title="手動更新"><span class="refresh-icon">&#8635;</span></button>
+    </div>
+    <div class="card-content">
+      <div class="exchange-list" id="exchange-list">
+        <div class="skeleton" style="height:40px"></div>
+        <div class="skeleton" style="height:40px"></div>
+        <div class="skeleton" style="height:40px"></div>
+      </div>
+    </div>
+    <div class="card-updated" id="exchange-updated">--</div>
+  </div>
+
+  <!-- 卡四：公眾假期 -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title"><span class="card-icon">&#127873;</span> BC 省公眾假期</div>
+      <button class="card-refresh" onclick="refreshCard('holidays', this)" title="手動更新"><span class="refresh-icon">&#8635;</span></button>
+    </div>
+    <div class="card-content" id="holidays-content">
+      <div class="holiday-main">
+        <div class="holiday-countdown" id="holiday-countdown">--</div>
+        <div class="holiday-days-label" id="holiday-days-label">日後</div>
+        <div class="holiday-name" id="holiday-name">載入中…</div>
+        <div class="holiday-date" id="holiday-date"></div>
+        <div class="holiday-type-badge" id="holiday-type"></div>
+      </div>
+      <div class="holiday-upcoming" id="holiday-upcoming"></div>
+    </div>
+    <div class="card-updated" id="holidays-updated">--</div>
+  </div>
+
+  <!-- 卡五：日出日落 -->
+  <div class="card sun-card">
+    <div class="card-header" style="width:100%">
+      <div class="card-title"><span class="card-icon">&#127749;</span> 日出日落</div>
+      <button class="card-refresh" onclick="refreshCard('sun', this)" title="手動更新"><span class="refresh-icon">&#8635;</span></button>
+    </div>
+    <div class="card-content" style="align-items:center">
+      <div class="sun-arc-container">
+        <div class="sun-arc">
+          <svg viewBox="0 0 180 90">
+            <path d="M 10 85 Q 90 -10 170 85" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="2" stroke-dasharray="3,4"/>
+            <path d="M 10 85 Q 90 -10 170 85" fill="none" stroke="rgba(255,159,10,0.3)" stroke-width="2"/>
+          </svg>
+          <div class="sun-dot" id="sun-dot" style="left:10px;top:85px"></div>
+        </div>
+      </div>
+      <div class="sun-times">
+        <div class="sun-time">
+          <div class="sun-time-icon">&#127749;</div>
+          <div class="sun-time-value" id="sunrise-time">--:--</div>
+          <div class="sun-time-label">日出</div>
+        </div>
+        <div class="sun-time">
+          <div class="sun-time-icon">&#127769;</div>
+          <div class="sun-time-value" id="sunset-time">--:--</div>
+          <div class="sun-time-label">日落</div>
+        </div>
+      </div>
+      <div class="sun-duration"><span class="sun-duration-value" id="sun-duration">日照：-- 小時 -- 分</span></div>
+    </div>
+    <div class="card-updated" id="sun-updated">--</div>
+  </div>
+
+  <!-- 卡六：環球市場 -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title"><span class="card-icon">&#128200;</span> 環球市場</div>
+      <button class="card-refresh" onclick="refreshCard('markets', this)" title="手動更新"><span class="refresh-icon">&#8635;</span></button>
+    </div>
+    <div class="card-content">
+      <div class="markets-list" id="markets-list">
+        <div class="skeleton" style="height:30px"></div>
+        <div class="skeleton" style="height:30px"></div>
+        <div class="skeleton" style="height:30px"></div>
+        <div class="skeleton" style="height:30px"></div>
+        <div class="skeleton" style="height:30px"></div>
+      </div>
+    </div>
+    <div class="card-updated" id="markets-updated">--</div>
+  </div>
+</div>
+
+<!-- 設定 -->
+<div class="settings-overlay" id="settings-overlay">
+  <div class="settings-modal">
+    <h2>&#9881; 設定</h2>
+    <div class="settings-section">
+      <h3>顯示</h3>
+      <div class="settings-option">
+        <label>稱呼</label>
+        <input type="text" id="setting-name" placeholder="Marco" style="width:120px">
+      </div>
+      <div class="settings-option">
+        <label>溫度單位</label>
+        <select id="setting-temp">
+          <option value="C">攝氏 (°C)</option>
+          <option value="F">華氏 (°F)</option>
+        </select>
+      </div>
+      <div class="settings-option">
+        <label>主題</label>
+        <select id="setting-theme">
+          <option value="dark">深色</option>
+          <option value="light">淺色</option>
+        </select>
+      </div>
+    </div>
+    <div class="settings-section">
+      <h3>自動更新</h3>
+      <div class="settings-option">
+        <label>每 1 分鐘自動更新</label>
+        <div class="toggle active" id="setting-autorefresh" onclick="this.classList.toggle('active'); saveSettings()"></div>
+      </div>
+    </div>
+    <button class="settings-close" onclick="toggleSettings()">完成</button>
+    <div class="settings-attribution">
+      天氣：<a href="https://open-meteo.com/" target="_blank">Open-Meteo</a> &middot;
+      匯率：<a href="https://www.exchangerate-api.com" target="_blank">ExchangeRate-API</a> &middot;
+      市場：Yahoo Finance
+    </div>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   0. 基礎設定
+   ========================================================= */
+const RICHMOND_LAT = 49.17;
+const RICHMOND_LON = -123.13;
+
+// 前端內置 BC 省假期表（離線亦可計算倒數）
+const BC_HOLIDAYS = [
+  { date:'2026-01-01', name:'元旦', type:'聯邦' },
+  { date:'2026-02-16', name:'家庭日', type:'BC 省' },
+  { date:'2026-04-03', name:'耶穌受難日', type:'聯邦' },
+  { date:'2026-05-18', name:'維多利亞日', type:'聯邦' },
+  { date:'2026-07-01', name:'加拿大國慶日', type:'聯邦' },
+  { date:'2026-08-03', name:'BC 省日', type:'BC 省' },
+  { date:'2026-09-07', name:'勞動節', type:'聯邦' },
+  { date:'2026-09-30', name:'全國真相與和解日', type:'聯邦' },
+  { date:'2026-10-12', name:'感恩節', type:'聯邦' },
+  { date:'2026-11-11', name:'國殤紀念日', type:'聯邦' },
+  { date:'2026-12-25', name:'聖誕節', type:'聯邦' },
+  { date:'2026-12-28', name:'節禮日（補假）', type:'非強制' },
+  { date:'2027-01-01', name:'元旦', type:'聯邦' },
+  { date:'2027-02-15', name:'家庭日', type:'BC 省' },
+  { date:'2027-03-26', name:'耶穌受難日', type:'聯邦' },
+  { date:'2027-05-24', name:'維多利亞日', type:'聯邦' },
+  { date:'2027-07-01', name:'加拿大國慶日', type:'聯邦' },
+  { date:'2027-08-02', name:'BC 省日', type:'BC 省' },
+  { date:'2027-09-06', name:'勞動節', type:'聯邦' },
+  { date:'2027-09-30', name:'全國真相與和解日', type:'聯邦' },
+  { date:'2027-10-11', name:'感恩節', type:'聯邦' },
+  { date:'2027-11-11', name:'國殤紀念日', type:'聯邦' },
+  { date:'2027-12-25', name:'聖誕節', type:'聯邦' },
+  { date:'2027-12-27', name:'節禮日（補假）', type:'非強制' },
+];
+
+// WMO 天氣代碼 → 圖示 + 繁體中文描述
+const WMO_CODES = {
+  0:{icon:'\u2600\uFE0F',desc:'天晴'}, 1:{icon:'\u{1F325}\uFE0F',desc:'大致天晴'},
+  2:{icon:'\u26C5\uFE0F',desc:'局部多雲'}, 3:{icon:'\u2601\uFE0F',desc:'陰天'},
+  45:{icon:'\u{1F32B}\uFE0F',desc:'有霧'}, 48:{icon:'\u{1F32B}\uFE0F',desc:'霧淞'},
+  51:{icon:'\u{1F327}\uFE0F',desc:'毛毛雨'}, 53:{icon:'\u{1F327}\uFE0F',desc:'毛毛雨'},
+  55:{icon:'\u{1F327}\uFE0F',desc:'濃毛毛雨'}, 56:{icon:'\u{1F328}\uFE0F',desc:'凍毛毛雨'},
+  57:{icon:'\u{1F328}\uFE0F',desc:'凍毛毛雨'}, 61:{icon:'\u{1F327}\uFE0F',desc:'小雨'},
+  63:{icon:'\u{1F327}\uFE0F',desc:'中雨'}, 65:{icon:'\u{1F327}\uFE0F',desc:'大雨'},
+  66:{icon:'\u{1F328}\uFE0F',desc:'凍雨'}, 67:{icon:'\u{1F328}\uFE0F',desc:'凍雨'},
+  71:{icon:'\u{1F328}\uFE0F',desc:'小雪'}, 73:{icon:'\u{1F328}\uFE0F',desc:'中雪'},
+  75:{icon:'\u{1F328}\uFE0F',desc:'大雪'}, 77:{icon:'\u{1F328}\uFE0F',desc:'雪粒'},
+  80:{icon:'\u{1F327}\uFE0F',desc:'陣雨'}, 81:{icon:'\u{1F327}\uFE0F',desc:'陣雨'},
+  82:{icon:'\u26C8\uFE0F',desc:'強陣雨'}, 85:{icon:'\u{1F328}\uFE0F',desc:'陣雪'},
+  86:{icon:'\u{1F328}\uFE0F',desc:'陣雪'}, 95:{icon:'\u26C8\uFE0F',desc:'雷暴'},
+  96:{icon:'\u26C8\uFE0F',desc:'雷暴夾冰雹'}, 99:{icon:'\u26C8\uFE0F',desc:'雷暴夾冰雹'},
+};
+const weatherInfo = c => WMO_CODES[c] || { icon:'\u2753', desc:'未知' };
+
+const WEEKDAY_ZH = ['日','一','二','三','四','五','六'];
+
+/* =========================================================
+   1. 設定
+   ========================================================= */
+const DEFAULT_SETTINGS = { name:'Marco', tempUnit:'C', theme:'dark', autoRefresh:true };
+let settings = { ...DEFAULT_SETTINGS };
+
+function getSettings(){ return settings; }
+function cToF(c){ return c*9/5+32; }
+function formatTemp(c){ return Math.round(settings.tempUnit === 'F' ? cToF(c) : c); }
+function tempUnit(){ return settings.tempUnit === 'F' ? '\u00B0F' : '\u00B0C'; }
+
+// 只有在自己電腦本機執行時，才把設定同步到伺服器檔案。
+// 部署到公開網站後，設定只存在每位訪客自己的瀏覽器（localStorage），
+// 避免你的稱呼／偏好被其他訪客看到或被覆寫。
+const IS_LOCAL_HOST = ['localhost', '127.0.0.1', '::1'].includes(location.hostname)
+  || location.protocol === 'file:';
+
+function loadSettings(){
+  try {
+    const local = localStorage.getItem('dashboard-settings');
+    if (local) settings = { ...DEFAULT_SETTINGS, ...JSON.parse(local) };
+  } catch(e){}
+  applySettings();
+
+  if (!IS_LOCAL_HOST) return;
+
+  fetch('/api/settings', { cache:'no-store' })
+    .then(r => r.ok ? r.json() : null)
+    .then(data => {
+      if (data && Object.keys(data).length) {
+        settings = { ...DEFAULT_SETTINGS, ...data };
+        localStorage.setItem('dashboard-settings', JSON.stringify(settings));
+        applySettings();
+      }
+    })
+    .catch(()=>{});
+}
+
+function saveSettings(){
+  settings.name = document.getElementById('setting-name').value || 'Marco';
+  settings.tempUnit = document.getElementById('setting-temp').value;
+  settings.theme = document.getElementById('setting-theme').value;
+  settings.autoRefresh = document.getElementById('setting-autorefresh').classList.contains('active');
+  localStorage.setItem('dashboard-settings', JSON.stringify(settings));
+
+  if (IS_LOCAL_HOST) {
+    fetch('/api/settings', {
+      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(settings)
+    }).catch(()=>{});
+  }
+  applySettings();
+}
+
+function applySettings(){
+  document.getElementById('setting-name').value = settings.name || '';
+  document.getElementById('setting-temp').value = settings.tempUnit || 'C';
+  document.getElementById('setting-theme').value = settings.theme || 'dark';
+  const t = document.getElementById('setting-autorefresh');
+  settings.autoRefresh ? t.classList.add('active') : t.classList.remove('active');
+
+  updateGreeting();
+  document.getElementById('weather-unit').textContent = tempUnit();
+  document.body.dataset.theme = settings.theme || 'dark';
+
+  const root = document.documentElement.style;
+  if (settings.theme === 'light'){
+    root.setProperty('--bg-gradient-start','#e8e8ed');
+    root.setProperty('--bg-gradient-end','#d1d1e0');
+    root.setProperty('--card-bg','rgba(255,255,255,0.62)');
+    root.setProperty('--card-border','rgba(0,0,0,0.08)');
+    root.setProperty('--card-hover','rgba(255,255,255,0.8)');
+    root.setProperty('--text-primary','rgba(0,0,0,0.85)');
+    root.setProperty('--text-secondary','rgba(0,0,0,0.55)');
+    root.setProperty('--text-tertiary','rgba(0,0,0,0.35)');
+  } else {
+    root.setProperty('--bg-gradient-start','#1a1a2e');
+    root.setProperty('--bg-gradient-end','#16213e');
+    root.setProperty('--card-bg','rgba(255,255,255,0.08)');
+    root.setProperty('--card-border','rgba(255,255,255,0.12)');
+    root.setProperty('--card-hover','rgba(255,255,255,0.12)');
+    root.setProperty('--text-primary','rgba(255,255,255,0.95)');
+    root.setProperty('--text-secondary','rgba(255,255,255,0.6)');
+    root.setProperty('--text-tertiary','rgba(255,255,255,0.4)');
+  }
+  setupAutoRefresh();
+}
+
+function toggleSettings(){
+  const o = document.getElementById('settings-overlay');
+  if (o.classList.contains('active')) { o.classList.remove('active'); saveSettings(); }
+  else {
+    o.classList.add('active');
+    document.getElementById('setting-name').value = settings.name || '';
+    document.getElementById('setting-temp').value = settings.tempUnit || 'C';
+    document.getElementById('setting-theme').value = settings.theme || 'dark';
+  }
+}
+
+/* =========================================================
+   2. 資料層：先試本機 API，失敗則直連公開 API
+   ========================================================= */
+let mode = 'unknown';
+let sunData = null;
+
+function setStatus(m){
+  mode = m;
+  const pill = document.getElementById('statusPill');
+  const text = document.getElementById('statusText');
+  const banner = document.getElementById('alertBanner');
+  const alertText = document.getElementById('alertText');
+
+  if (m === 'local'){
+    pill.classList.remove('offline');
+    text.textContent = '已連線';
+    banner.classList.remove('show');
+  } else if (m === 'static'){
+    // GitHub Pages 等純靜態環境：天氣／匯率／假期即時，行情為定時快照
+    pill.classList.remove('offline');
+    text.textContent = '已連線';
+    banner.classList.remove('show');
+  } else if (m === 'direct'){
+    pill.classList.add('offline');
+    text.textContent = '直連模式';
+    banner.classList.add('show');
+    alertText.innerHTML = '目前以<b>直連模式</b>運作（天氣、匯率、假期正常）。' +
+      '<br>環球市場數據需要本機服務才能取得 —— 請用 <code>http://localhost:3000</code> 開啟本頁，' +
+      '或雙擊資料夾內的 <code>啟動儀表板.bat</code>。';
+  } else {
+    pill.classList.add('offline');
+    text.textContent = '離線';
+    banner.classList.add('show');
+    alertText.innerHTML = '無法取得即時資料。請確認網絡連線，或雙擊資料夾內的 <code>啟動儀表板.bat</code> 啟動本機服務。';
+  }
+}
+
+async function apiGet(path, fallback){
+  try {
+    const res = await fetch(path, { cache:'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const json = await res.json();
+    if (json && json.error) throw new Error(json.error);
+    return json;
+  } catch (err) {
+    if (fallback) return await fallback();
+    throw err;
+  }
+}
+
+/* ---------- 天氣 ---------- */
+async function loadWeather(){
+  const directUrl = `https://api.open-meteo.com/v1/forecast?latitude=${RICHMOND_LAT}&longitude=${RICHMOND_LON}` +
+    `&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m,is_day` +
+    `&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_max` +
+    `&timezone=America/Vancouver&forecast_days=9`;
+
+  const data = await apiGet('/api/weather', async () => {
+    const r = await fetch(directUrl, { cache:'no-store' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return r.json();
+  });
+
+  // 只有在模式仍未確定時才降級為直連；不要覆寫已判斷好的 static / local
+  if (mode === 'unknown' || mode === 'offline') setStatus('direct');
+  renderWeather(data);
+  return data;
+}
+
+function renderWeather(data){
+  const cur = data.current;
+  const info = weatherInfo(cur.weather_code);
+  document.getElementById('weather-icon').textContent =
+    (cur.is_day === 0 && cur.weather_code === 0) ? '\u{1F319}' : info.icon;
+  document.getElementById('weather-temp').textContent = formatTemp(cur.temperature_2m);
+  document.getElementById('weather-unit').textContent = tempUnit();
+  document.getElementById('weather-desc').textContent = info.desc;
+  document.getElementById('weather-feels').textContent = formatTemp(cur.apparent_temperature) + tempUnit();
+  document.getElementById('weather-humidity').textContent = cur.relative_humidity_2m + '%';
+  document.getElementById('weather-wind').textContent = Math.round(cur.wind_speed_10m) + ' 公里/小時';
+
+  // 今日高低溫／降雨機率
+  const d0 = data.daily;
+  document.getElementById('weather-today').innerHTML =
+    `<span>今日 <b>${formatTemp(d0.temperature_2m_max[0])}\u00B0</b>` +
+    `<span class="wt-sep"> / </span>${formatTemp(d0.temperature_2m_min[0])}\u00B0</span>` +
+    `<span>降雨 <b>${d0.precipitation_probability_max[0]}%</b></span>`;
+
+  setUpdatedTime('weather-updated');
+  renderForecast(data.daily);
+  setUpdatedTime('forecast-updated');
+  renderSun(data.daily.sunrise[0], data.daily.sunset[0]);
+  setUpdatedTime('sun-updated');
+}
+
+function renderForecast(daily){
+  const list = document.getElementById('forecast-list');
+  list.innerHTML = '';
+  for (let i = 0; i < daily.time.length; i++){
+    const d = new Date(daily.time[i] + 'T00:00:00');
+    const info = weatherInfo(daily.weather_code[i]);
+    const el = document.createElement('div');
+    el.className = 'forecast-day' + (i === 0 ? ' today' : '');
+    el.innerHTML = `
+      <div class="day-name">${i === 0 ? '今天' : '週' + WEEKDAY_ZH[d.getDay()]}</div>
+      <div class="day-icon">${info.icon}</div>
+      <div class="day-temps">
+        <span class="day-high">${formatTemp(daily.temperature_2m_max[i])}\u00B0</span>
+        <span class="day-low"> ${formatTemp(daily.temperature_2m_min[i])}\u00B0</span>
+      </div>
+      <div class="day-precip">${daily.precipitation_probability_max[i]}%</div>`;
+    list.appendChild(el);
+  }
+}
+
+function renderSun(sunriseISO, sunsetISO){
+  sunData = [sunriseISO, sunsetISO];
+  const sr = new Date(sunriseISO), ss = new Date(sunsetISO);
+
+  const fmt = d => {
+    let h = d.getHours();
+    const m = String(d.getMinutes()).padStart(2,'0');
+    const ap = h >= 12 ? '下午' : '上午';
+    h = h % 12 || 12;
+    return `${ap} ${h}:${m}`;
+  };
+  document.getElementById('sunrise-time').textContent = fmt(sr);
+  document.getElementById('sunset-time').textContent = fmt(ss);
+
+  const diff = ss - sr;
+  document.getElementById('sun-duration').textContent =
+    `日照：${Math.floor(diff/3600000)} 小時 ${Math.floor((diff%3600000)/60000)} 分`;
+
+  const now = new Date();
+  let p = (now - sr) / diff;
+  p = Math.max(0, Math.min(1, p));
+  const t = p;
+  const x = (1-t)*(1-t)*10 + 2*(1-t)*t*90 + t*t*170;
+  const y = (1-t)*(1-t)*85 + 2*(1-t)*t*(-10) + t*t*85;
+
+  const dot = document.getElementById('sun-dot');
+  dot.style.left = x + 'px';
+  dot.style.top = y + 'px';
+  const night = now < sr || now > ss;
+  dot.style.opacity = night ? '0.3' : '1';
+  dot.style.background = night ? 'rgba(255,255,255,0.3)' : 'var(--accent-orange)';
+  dot.style.boxShadow = night ? 'none' : '0 0 20px rgba(255,159,10,0.6)';
+}
+
+/* ---------- 匯率 ---------- */
+async function loadExchange(){
+  const data = await apiGet('/api/exchange', async () => {
+    const r = await fetch('https://open.er-api.com/v6/latest/HKD', { cache:'no-store' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const j = await r.json();
+    return {
+      base:'HKD',
+      lastUpdate: j.time_last_update_utc,
+      rates:{ CAD:j.rates.CAD, JPY:j.rates.JPY, GBP:j.rates.GBP }
+    };
+  });
+
+  const r = data.rates;
+  const rows = [
+    { code:'CAD', name:'加拿大元', flag:'\u{1F1E8}\u{1F1E6}', perHKD:r.CAD },
+    { code:'JPY', name:'日圓',     flag:'\u{1F1EF}\u{1F1F5}', perHKD:r.JPY },
+    { code:'GBP', name:'英鎊',     flag:'\u{1F1EC}\u{1F1E7}', perHKD:r.GBP },
+  ];
+
+  const list = document.getElementById('exchange-list');
+  list.innerHTML = '';
+
+  rows.forEach(c => {
+    // 大數字 = 兌 1 單位外幣需要幾多港幣（日圓以 100 為單位較易讀）
+    const qty = c.code === 'JPY' ? 100 : 1;
+    const hkdPerUnit = (1 / c.perHKD) * qty;
+    const bigNum = qty === 100 ? hkdPerUnit.toFixed(2) : hkdPerUnit.toFixed(4);
+    const smallNum = c.perHKD >= 1 ? c.perHKD.toFixed(2) : c.perHKD.toFixed(4);
+
+    const el = document.createElement('div');
+    el.className = 'exchange-item fade-in';
+    el.innerHTML = `
+      <div class="exchange-currency">
+        <span class="exchange-flag">${c.flag}</span>
+        <div class="exchange-info">
+          <span class="exchange-code">${c.code}</span>
+          <span class="exchange-name">${c.name}</span>
+        </div>
+      </div>
+      <div class="exchange-value">
+        <div class="exchange-rate">HK$${bigNum}</div>
+        <div class="exchange-unit">${qty} ${c.code} \u00B7 1 港幣 = ${smallNum} ${c.code}</div>
+      </div>`;
+    list.appendChild(el);
+  });
+
+  setUpdatedTime('exchange-updated');
+}
+
+/* ---------- 假期（純前端計算，無需網絡） ---------- */
+function loadHolidays(){
+  const now = new Date();
+  const list = BC_HOLIDAYS
+    .map(h => {
+      const dt = new Date(h.date + 'T00:00:00');
+      const days = Math.ceil((dt - now) / 86400000);
+      return { ...h, days, dt };
+    })
+    .filter(h => h.days >= 0)
+    .sort((a,b) => a.days - b.days);
+
+  if (!list.length) return;
+
+  const next = list[0];
+  document.getElementById('holiday-countdown').textContent = next.days;
+  document.getElementById('holiday-days-label').textContent = next.days === 1 ? '日後' : '日後';
+  document.getElementById('holiday-name').textContent = next.name;
+  document.getElementById('holiday-date').textContent =
+    next.dt.toLocaleDateString('zh-HK', { month:'long', day:'numeric', weekday:'long', year:'numeric' });
+
+  const badge = document.getElementById('holiday-type');
+  badge.textContent = next.type;
+  const colors = {
+    '聯邦':{ bg:'rgba(10,132,255,0.2)', c:'#0A84FF' },
+    'BC 省':{ bg:'rgba(255,159,10,0.2)', c:'#FF9F0A' },
+    '非強制':{ bg:'rgba(255,255,255,0.1)', c:'rgba(255,255,255,0.5)' },
+  };
+  const col = colors[next.type] || colors['非強制'];
+  badge.style.background = col.bg;
+  badge.style.color = col.c;
+
+  const up = document.getElementById('holiday-upcoming');
+  up.innerHTML = '';
+  list.slice(1,4).forEach(h => {
+    const el = document.createElement('div');
+    el.className = 'holiday-upcoming-item';
+    el.innerHTML = `<span>${h.name}</span><span>${h.days} 日 \u00B7 ${h.dt.toLocaleDateString('zh-HK',{month:'numeric',day:'numeric'})}</span>`;
+    up.appendChild(el);
+  });
+
+  setUpdatedTime('holidays-updated');
+}
+
+/* ---------- 市場（必須經本機服務） ---------- */
+const MARKET_ORDER = ['HSI','SP500','NAS100','DOW30','GOLD'];
+
+async function loadMarkets(){
+  const list = document.getElementById('markets-list');
+  try {
+    const data = await apiGet('/api/markets', async () => {
+      // 靜態版本（GitHub Pages）：讀取由 GitHub Actions 定時產生的快照
+      const r = await fetch('./data/markets.json', { cache:'no-store' });
+      if (!r.ok) throw new Error('no snapshot');
+      const j = await r.json();
+      j.__static = true;
+      return j;
+    });
+
+    renderMarkets(data.markets);
+
+    if (data.__static) {
+      const d = new Date(data.timestamp);
+      document.getElementById('markets-updated').textContent =
+        `快照 · ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+    } else {
+      setUpdatedTime('markets-updated');
+    }
+  } catch (err) {
+    list.innerHTML = `
+      <div class="card-state">
+        <div class="card-state-icon">&#128274;</div>
+        <div class="card-state-text">
+          <b>暫時取不到行情</b><br>
+          請確認網絡，或稍後重新載入。
+        </div>
+      </div>`;
+    document.getElementById('markets-updated').textContent = '未連線';
+  }
+}
+
+const MARKET_NAMES_ZH = {
+  'Hang Seng Index': '恒生指數',
+  'S&P 500': '標普 500',
+  'NASDAQ 100': '納斯達克 100',
+  'NASDAQ Composite': '納斯達克綜合指數',
+  'Dow Jones Industrial': '道瓊斯工業平均',
+  'Gold Futures': '黃金期貨',
+};
+
+function renderMarkets(markets){
+  const list = document.getElementById('markets-list');
+  list.innerHTML = '';
+  MARKET_ORDER.forEach(key => {
+    const m = markets[key];
+    if (!m) return;
+    const el = document.createElement('div');
+    el.className = 'market-item fade-in';
+
+    const zhName = MARKET_NAMES_ZH[m.name] || m.name;
+
+    if (m.error){
+      el.innerHTML = `
+        <div class="market-info"><span class="market-name">${zhName}</span><span class="market-symbol">讀取失敗</span></div>
+        <div class="market-data"><span class="market-price" style="color:var(--text-tertiary)">--</span></div>`;
+      list.appendChild(el);
+      return;
+    }
+
+    const cls = m.changePercent > 0 ? 'up' : (m.changePercent < 0 ? 'down' : 'flat');
+    const arrow = m.changePercent > 0 ? '\u25B2' : (m.changePercent < 0 ? '\u25BC' : '\u25CF');
+    const sym = m.currency === 'HKD' ? 'HK$' : (m.currency === 'USD' ? 'US$' : '');
+    const price = m.price >= 10000
+      ? m.price.toLocaleString('en-US',{maximumFractionDigits:0})
+      : m.price.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+
+    el.innerHTML = `
+      <div class="market-info">
+        <span class="market-name">${zhName}</span>
+        <span class="market-symbol">${m.symbol || key}</span>
+      </div>
+      <div class="market-data">
+        <span class="market-price">${sym}${price}</span>
+        <span class="market-change ${cls}">${arrow} ${Math.abs(m.changePercent).toFixed(2)}%</span>
+      </div>`;
+    list.appendChild(el);
+  });
+}
+
+/* =========================================================
+   3. 更新控制
+   ========================================================= */
+function setUpdatedTime(id){
+  const d = new Date();
+  document.getElementById(id).textContent =
+    `更新於 ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+
+async function refreshAll(showStatus){
+  const tasks = [
+    loadWeather().catch(e => console.warn('weather', e)),
+    loadExchange().catch(e => console.warn('exchange', e)),
+    loadMarkets(),
+  ];
+  loadHolidays();
+  await Promise.allSettled(tasks);
+
+  if (showStatus){
+    try {
+      const r = await fetch('/api/health', { cache:'no-store' });
+      if (r.ok) { setStatus('local'); return; }
+    } catch { /* ignore */ }
+
+    try {
+      const r = await fetch('./data/markets.json', { cache:'no-store' });
+      setStatus(r.ok ? 'static' : (navigator.onLine ? 'direct' : 'offline'));
+    } catch {
+      setStatus(navigator.onLine ? 'direct' : 'offline');
+    }
+  }
+}
+
+function refreshCard(name, btn){
+  if (btn){
+    btn.classList.add('spinning');
+    setTimeout(() => btn.classList.remove('spinning'), 800);
+  }
+  switch(name){
+    case 'weather':
+    case 'forecast':
+    case 'sun':
+      loadWeather().catch(()=>{});
+      break;
+    case 'exchange':
+      loadExchange().catch(()=>{});
+      break;
+    case 'holidays':
+      loadHolidays();
+      break;
+    case 'markets':
+      loadMarkets();
+      break;
+  }
+}
+
+function reconnectAll(){ refreshAll(true); }
+
+/* =========================================================
+   4. 時鐘 / 招呼語
+   ========================================================= */
+function updateGreeting(){
+  const h = new Date().getHours();
+  let g = h < 6 ? '夜深了' : h < 12 ? '早晨' : h < 18 ? '午安' : '晚上好';
+  document.getElementById('greeting').textContent =
+    settings.name ? `${g}，${settings.name}` : g;
+}
+
+function updateClock(){
+  const now = new Date();
+  document.getElementById('dateString').textContent =
+    now.toLocaleDateString('zh-HK', { month:'long', day:'numeric', weekday:'long' });
+  document.getElementById('clock').textContent =
+    [now.getHours(), now.getMinutes(), now.getSeconds()]
+      .map(n => String(n).padStart(2,'0')).join(':');
+}
+
+/* =========================================================
+   5. 自動更新
+   ========================================================= */
+let autoTimer = null;
+function setupAutoRefresh(){
+  if (autoTimer) { clearInterval(autoTimer); autoTimer = null; }
+  if (settings.autoRefresh){
+    autoTimer = setInterval(() => refreshAll(false), 60000);
+  }
+}
+
+/* =========================================================
+   6. 啟動
+   ========================================================= */
+document.addEventListener('change', e => {
+  if (e.target.closest('.settings-modal')) saveSettings();
+});
+document.getElementById('settings-overlay').addEventListener('click', e => {
+  if (e.target.id === 'settings-overlay') toggleSettings();
+});
+
+async function init(){
+  loadSettings();
+  updateClock();
+  setInterval(updateClock, 1000);
+  setInterval(updateGreeting, 60000);
+
+  let local = false;
+  try {
+    const r = await fetch('/api/health', { cache:'no-store' });
+    local = r.ok;
+  } catch { local = false; }
+
+  let hasSnapshot = false;
+  if (!local) {
+    try {
+      const r = await fetch('./data/markets.json', { cache:'no-store' });
+      hasSnapshot = r.ok;
+    } catch { hasSnapshot = false; }
+  }
+
+  setStatus(local ? 'local' : (hasSnapshot ? 'static' : 'direct'));
+
+  await refreshAll(false);
+  setupAutoRefresh();
+
+  // 每分鐘重畫太陽位置
+  setInterval(() => {
+    if (sunData) renderSun(sunData[0], sunData[1]);
+  }, 60000);
+}
+
+init();
+</script>
+</body>
+</html>

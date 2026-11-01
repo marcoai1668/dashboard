@@ -1,0 +1,20 @@
+# 依賴
+node_modules/
+
+# 個人設定（本機才有意義，不應上傳）
+settings.json
+
+# WorkBuddy 應用標記與工作區資料
+.wbapp_*.genie
+.workbuddy/
+.workbuddy-ai/
+
+# 開發時產生的截圖
+screenshot*.png
+
+# 系統／編輯器
+.DS_Store
+Thumbs.db
+*.log
+.vscode/
+.idea/
