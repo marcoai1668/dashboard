@@ -68,6 +68,8 @@ git push -u origin main
 ```
 
 > GitHub Actions 的 cron 在繁忙時段可能延遲，實際行情更新間隔約 10–25 分鐘。
+>
+> GitHub 會在 repo 連續 60 天沒有活動後自動停用定時工作流程。若發現行情不再更新，到 **Actions** 分頁手動執行一次即可恢復。
 
 ## 部署到 Node 主機（即時行情）
 
