@@ -132,12 +132,13 @@ body::after {
 }
 .banner-btn:hover { background: rgba(255,255,255,0.2); }
 
-/* ===== GridStack 版面 ===== */
+/* ===== GridStack 版面（容器不可有左右 padding，否則格位會偏移） ===== */
 .grid-stack {
   position: relative; z-index: 1;
-  width: 100%; max-width: 1400px;
+  width: calc(100% - 48px);
+  max-width: 1400px;
   margin: 0 auto;
-  padding: 6px 24px 28px;
+  padding: 6px 0 28px;
 }
 .grid-stack-item-content {
   padding: 0 !important;
@@ -371,7 +372,6 @@ body.edit-mode .grid-stack-item > .ui-resizable-se {
   filter: none;
   opacity: 1;
 }
-body.edit-mode .grid-stack-item.ui-draggable-disabled > .ui-resizable-se { display: block; }
 .grid-stack-item.ui-draggable-dragging .card,
 .grid-stack-item.ui-resizable-resizing .card {
   box-shadow: 0 12px 40px rgba(0,0,0,0.45);
@@ -427,7 +427,7 @@ body[data-theme="light"] .grid-stack-placeholder > .placeholder-content { backgr
   .header { padding: 20px 16px 12px; flex-direction: column; align-items: flex-start; gap: 10px; }
   .header-right { width: 100%; justify-content: space-between; }
   .alert-banner { margin: 0 16px 4px; }
-  .grid-stack { padding: 0 12px 24px; }
+  .grid-stack { width: calc(100% - 24px); padding: 0 0 24px; }
   .weather-hero-icon { font-size: 56px; }
   .weather-hero-temp { font-size: 44px; }
   .weather-hero-temp .temp-unit { font-size: 20px; }
@@ -1012,7 +1012,7 @@ function setStatus(m){
 
   if (m === 'local' || m === 'static'){
     pill.classList.remove('offline');
-    text.textContent = m === 'local' ? '已連線' : '已連線';
+    text.textContent = '已連線';
     banner.classList.remove('show');
   } else if (m === 'direct'){
     pill.classList.add('offline');
