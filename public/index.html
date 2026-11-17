@@ -27,6 +27,8 @@
   --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   --gap: 16px;
   --header-h: 72px;
+  --grid-cols: 6;
+  --row-height: 80px;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -62,6 +64,108 @@ body::after {
   pointer-events: none; z-index: 0;
 }
 
+/* ===== 編輯模式覆蓋層 ===== */
+.edit-grid-overlay {
+  position: fixed; inset: 0; pointer-events: none; z-index: 50; display: none;
+}
+.edit-grid-overlay.active { display: block; }
+.edit-grid-overlay::before {
+  content: '';
+  position: absolute; top: var(--header-h); left: 32px; right: 32px; bottom: 0;
+  background-image: 
+    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: calc((100% - 64px) / 6) var(--row-height);
+  background-position: 0 0;
+  pointer-events: none;
+}
+body.edit-mode .edit-grid-overlay { display: block; }
+
+/* ===== 編輯模式卡片樣式 ===== */
+body.edit-mode .card {
+  transition: box-shadow 0.2s, border-color 0.2s, transform 0.1s;
+}
+body.edit-mode .card:hover {
+  transform: none;
+  box-shadow: 0 0 0 2px var(--accent-blue), 0 8px 32px rgba(0,0,0,0.3);
+  border-color: var(--accent-blue);
+}
+body.edit-mode .card.dragging {
+  opacity: 0.6; transform: scale(1.02); z-index: 100;
+  box-shadow: 0 0 0 2px var(--accent-orange), 0 12px 40px rgba(0,0,0,0.4);
+  border-color: var(--accent-orange);
+}
+body.edit-mode .card.resizing {
+  transition: none; z-index: 100;
+}
+body.edit-mode .card .resize-handle {
+  display: block;
+}
+body.edit-mode .card .drag-handle {
+  display: flex;
+}
+body.edit-mode .card .card-refresh { opacity: 0.3; pointer-events: none; }
+body.edit-mode .card-header { cursor: grab; }
+body.edit-mode .card-header:active { cursor: grabbing; }
+
+/* 拖曳手柄 */
+.drag-handle {
+  display: none; align-items: center; justify-content: center;
+  width: 28px; height: 28px; border-radius: 6px;
+  background: rgba(255,255,255,0.1); color: var(--text-tertiary);
+  cursor: grab; transition: var(--transition);
+  flex-shrink: 0;
+}
+.drag-handle:hover { background: var(--accent-blue); color: white; }
+.drag-handle:active { cursor: grabbing; }
+
+/* 拉伸手柄 */
+.resize-handle {
+  display: none; position: absolute; bottom: 0; right: 0;
+  width: 20px; height: 20px;
+  background: linear-gradient(135deg, transparent 50%, rgba(255,255,255,0.15) 50%);
+  cursor: se-resize; border-radius: 0 0 var(--radius-md) 0;
+  z-index: 10;
+}
+.resize-handle::after {
+  content: ''; position: absolute; bottom: 3px; right: 3px;
+  width: 12px; height: 12px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M0 10h4M0 6h8M0 2h12' stroke='white' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-size: contain; opacity: 0.6;
+}
+.resize-handle:hover { background: linear-gradient(135deg, transparent 50%, var(--accent-blue) 50%); }
+
+/* 放置指示器 */
+.drop-indicator {
+  position: absolute; border: 2px dashed var(--accent-blue);
+  background: rgba(10,132,255,0.15); border-radius: var(--radius-sm);
+  pointer-events: none; z-index: 80; display: none;
+  transition: all 0.15s ease-out;
+}
+.drop-indicator.active { display: block; }
+
+/* 編輯工具列 */
+.edit-toolbar {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+  display: none; gap: 12px; align-items: center;
+  background: rgba(30,30,50,0.95); backdrop-filter: blur(20px);
+  border: 1px solid var(--card-border); border-radius: 50px;
+  padding: 10px 20px; z-index: 200; box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+}
+body.edit-mode .edit-toolbar { display: flex; }
+.edit-toolbar-btn {
+  background: transparent; border: none; color: var(--text-secondary);
+  font-size: 13px; font-weight: 500; padding: 6px 14px; border-radius: 20px;
+  cursor: pointer; transition: var(--transition); font-family: inherit;
+  display: flex; align-items: center; gap: 6px;
+}
+.edit-toolbar-btn:hover { background: rgba(255,255,255,0.1); color: var(--text-primary); }
+.edit-toolbar-btn.primary { background: var(--accent-blue); color: white; }
+.edit-toolbar-btn.primary:hover { opacity: 0.9; }
+.edit-toolbar-btn.danger { color: var(--accent-red); }
+.edit-toolbar-btn.danger:hover { background: rgba(255,69,58,0.15); color: var(--accent-red); }
+.edit-toolbar-divider { width: 1px; height: 20px; background: var(--card-border); }
+
 /* ===== 頂部 ===== */
 .header {
   position: relative; z-index: 1;
@@ -89,7 +193,7 @@ body::after {
 .status-dot {
   width: 6px; height: 6px; border-radius: 50%;
   background: currentColor;
-  box-shadow: 0 0 8px currentColor.
+  box-shadow: 0 0 8px currentColor;
 }
 .status-pill.offline .status-dot { animation: pulse 1.6s infinite; }
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.25} }
@@ -99,14 +203,15 @@ body::after {
   font-variant-numeric: tabular-nums; font-weight: 500;
 }
 
-.settings-btn {
+.settings-btn, .edit-mode-btn {
   background: var(--card-bg); border: 1px solid var(--card-border);
   border-radius: 50%; width: 36px; height: 36px;
   display: flex; align-items: center; justify-content: center;
   cursor: pointer; transition: var(--transition);
-  backdrop-filter: blur(var(--blur)); color: var(--text-primary); font-size: 18px.
+  backdrop-filter: blur(var(--blur)); color: var(--text-primary); font-size: 18px;
 }
-.settings-btn:hover { background: var(--card-hover); transform: scale(1.05); }
+.settings-btn:hover, .edit-mode-btn:hover { background: var(--card-hover); transform: scale(1.05); }
+.edit-mode-btn.active { background: var(--accent-blue); border-color: var(--accent-blue); }
 
 /* ===== 提示橫幅 ===== */
 .alert-banner {
@@ -142,22 +247,14 @@ body::after {
   position: relative; z-index: 1;
   display: grid;
   grid-template-columns: repeat(6, 1fr);
-  grid-template-rows: auto auto auto;
+  grid-template-rows: repeat(6, var(--row-height));
   gap: var(--gap);
   padding: 10px 32px 28px;
   width: 100%; max-width: 1400px;
+  min-height: calc(6 * var(--row-height) + 5 * var(--gap));
 }
 
-/* 區域命名：
-   weather-main   : col 1-3, row 1
-   weather-today  : col 4-6, row 1  (即時卡片右側放「今日高低/降雨」與快速資訊)
-   forecast       : col 1-3, row 2
-   sun            : col 4-6, row 2
-   exchange       : col 1-3, row 3
-   markets        : col 4-6, row 3
-   holidays       : col 1-6, row 4 (全寬)
-*/
-
+/* 卡片基礎 */
 .card {
   background: var(--card-bg);
   backdrop-filter: blur(var(--blur)); -webkit-backdrop-filter: blur(var(--blur));
@@ -166,7 +263,8 @@ body::after {
   transition: var(--transition);
   position: relative; overflow: hidden;
   display: flex; flex-direction: column;
-  min-height: 180px;
+  min-height: 100%;
+  contain: layout style;
 }
 .card:hover {
   background: var(--card-hover);
@@ -174,25 +272,10 @@ body::after {
   transform: translateY(-2px);
 }
 
-/* 主卡片：即時天氣 —— 跨 3 欄，row 1 */
-.card--hero {
-  grid-column: 1 / 4;
-  grid-row: 1;
-  min-height: 220px;
-  padding: 24px 28px;
-}
-
-/* 次要卡片：預報、日出日落、匯率、市場 —— 各 3 欄 */
-.card--secondary {
-  grid-column: span 3;
-  min-height: 170px;
-}
-
-/* 假期卡片：全寬 */
-.card--full {
-  grid-column: 1 / -1;
-  min-height: 160px;
-}
+/* 預設佈局類別（非編輯模式用） */
+.card--hero { grid-column: 1 / 4; grid-row: 1 / 3; min-height: calc(2 * var(--row-height) + var(--gap)); padding: 24px 28px; }
+.card--secondary { grid-column: span 3; grid-row: span 2; min-height: calc(2 * var(--row-height) + var(--gap)); }
+.card--full { grid-column: 1 / -1; grid-row: span 2; min-height: calc(2 * var(--row-height) + var(--gap)); }
 
 .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
 .card-title {
@@ -219,16 +302,14 @@ body::after {
 .card-state {
   flex: 1; display: flex; flex-direction: column;
   align-items: center; justify-content: center;
-  gap: 8px; text-align: center; padding: 16px 4px.
+  gap: 8px; text-align: center; padding: 16px 4px;
 }
 .card-state-icon { font-size: 26px; opacity: 0.55; }
 .card-state-text { font-size: 12.5px; color: var(--text-tertiary); line-height: 1.7; }
 .card-state-text b { color: var(--text-secondary); font-weight: 600; }
 
 /* ===== 主卡片：即時天氣 ===== */
-.weather-hero {
-  display: flex; flex-direction: column; height: 100%;
-}
+.weather-hero { display: flex; flex-direction: column; height: 100%; }
 .weather-hero-top {
   display: flex; align-items: flex-start; gap: 24px;
   flex: 1; min-height: 140px;
@@ -244,13 +325,9 @@ body::after {
 .weather-hero-details {
   display: flex; gap: 28px; margin-top: 16px; flex-wrap: wrap;
 }
-.weather-hero-detail {
-  display: flex; flex-direction: column; gap: 2px;
-}
+.weather-hero-detail { display: flex; flex-direction: column; gap: 2px; }
 .weather-hero-detail-label { color: var(--text-tertiary); font-size: 11px; }
 .weather-hero-detail-value { color: var(--text-primary); font-weight: 500; font-size: 15px; }
-
-/* 今日高低溫/降雨 —— 放在 hero 右側或底部視寬度 */
 .weather-today-bar {
   display: flex; gap: 20px; align-items: center;
   margin-top: auto; padding-top: 16px;
@@ -317,7 +394,7 @@ body::after {
   position: absolute; width: 16px; height: 16px;
   background: var(--accent-orange); border-radius: 50%;
   box-shadow: 0 0 24px rgba(255,159,10,0.7);
-  transform: translate(-50%, -50%); transition: all 0.5s ease.
+  transform: translate(-50%, -50%); transition: all 0.5s ease;
 }
 .sun-times { display: flex; justify-content: space-between; width: 100%; max-width: 320px; margin-top: 10px; }
 .sun-time { text-align: center; flex: 1; }
@@ -348,13 +425,13 @@ body::after {
 .settings-overlay {
   position: fixed; inset: 0;
   background: rgba(0,0,0,0.5); backdrop-filter: blur(10px);
-  z-index: 100; display: none; align-items: center; justify-content: center.
+  z-index: 100; display: none; align-items: center; justify-content: center;
 }
 .settings-overlay.active { display: flex; }
 .settings-modal {
   background: rgba(30,30,50,0.92); backdrop-filter: blur(40px);
   border: 1px solid var(--card-border); border-radius: 24px;
-  padding: 32px; width: 90%; max-width: 480px; max-height: 80vh; overflow-y: auto.
+  padding: 32px; width: 90%; max-width: 480px; max-height: 80vh; overflow-y: auto;
 }
 .settings-modal h2 { font-size: 20px; margin-bottom: 20px; }
 .settings-section { margin-bottom: 20px; }
@@ -364,7 +441,7 @@ body::after {
 .settings-option select, .settings-option input {
   background: rgba(255,255,255,0.1); border: 1px solid var(--card-border);
   border-radius: 8px; color: var(--text-primary); padding: 6px 12px; font-size: 14px; outline: none;
-  font-family: inherit.
+  font-family: inherit;
 }
 .settings-option select:focus, .settings-option input:focus { border-color: var(--accent-blue); }
 .toggle { position: relative; width: 44px; height: 26px; background: rgba(255,255,255,0.1); border-radius: 13px; cursor: pointer; transition: var(--transition); flex-shrink: 0; }
@@ -374,7 +451,7 @@ body::after {
 .settings-close {
   background: var(--accent-blue); color: white; border: none; border-radius: 12px;
   padding: 10px 24px; font-size: 15px; font-weight: 600; cursor: pointer;
-  transition: var(--transition); width: 100%; margin-top: 8px; font-family: inherit.
+  transition: var(--transition); width: 100%; margin-top: 8px; font-family: inherit;
 }
 .settings-close:hover { opacity: 0.9; }
 .settings-attribution { text-align: center; font-size: 11px; color: var(--text-tertiary); margin-top: 16px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.06); }
@@ -391,17 +468,28 @@ body[data-theme="light"] .settings-option input { background: rgba(0,0,0,0.05); 
 body[data-theme="light"] .settings-option,
 body[data-theme="light"] .settings-attribution { border-color: rgba(0,0,0,0.08); }
 body[data-theme="light"] .card-state-text code { background: rgba(0,0,0,0.06); color: #0066CC; padding: 1px 5px; border-radius: 4px; }
+body[data-theme="light"] .edit-toolbar { background: rgba(250,250,252,0.97); border-color: rgba(0,0,0,0.08); }
+body[data-theme="light"] .edit-toolbar-btn { color: rgba(0,0,0,0.55); }
+body[data-theme="light"] .edit-toolbar-btn:hover { background: rgba(0,0,0,0.06); color: rgba(0,0,0,0.85); }
+body[data-theme="light"] .edit-toolbar-divider { background: rgba(0,0,0,0.08); }
+body[data-theme="light"] .drag-handle { background: rgba(0,0,0,0.06); color: rgba(0,0,0,0.35); }
+body[data-theme="light"] .drag-handle:hover { background: var(--accent-blue); color: white; }
+body[data-theme="light"] .resize-handle { background: linear-gradient(135deg, transparent 50%, rgba(0,0,0,0.08) 50%); }
+body[data-theme="light"] .resize-handle::after { filter: invert(1); }
+body[data-theme="light"] .resize-handle:hover { background: linear-gradient(135deg, transparent 50%, var(--accent-blue) 50%); }
+body[data-theme="light"] .drop-indicator { border-color: var(--accent-blue); background: rgba(10,132,255,0.15); }
 
 /* ===== 響應式 ===== */
 @media (max-width: 1100px) {
-  .dashboard { grid-template-columns: repeat(4, 1fr); }
-  .card--hero { grid-column: 1 / -1; }
-  .card--secondary { grid-column: span 2; }
-  .card--full { grid-column: 1 / -1; }
+  .dashboard { grid-template-columns: repeat(4, 1fr); --grid-cols: 4; }
+  .card--hero { grid-column: 1 / -1; grid-row: span 2; }
+  .card--secondary { grid-column: span 2; grid-row: span 2; }
+  .card--full { grid-column: 1 / -1; grid-row: span 2; }
+  .edit-grid-overlay::before { background-size: calc((100% - 64px) / 4) var(--row-height); }
 }
 @media (max-width: 760px) {
-  .dashboard { grid-template-columns: 1fr; padding: 16px; gap: 12px; }
-  .card--hero, .card--secondary, .card--full { grid-column: 1; min-height: auto; }
+  .dashboard { grid-template-columns: 1fr; padding: 16px; gap: 12px; --grid-cols: 1; }
+  .card--hero, .card--secondary, .card--full { grid-column: 1; grid-row: auto; min-height: auto; }
   .header { padding: 20px 16px 12px; flex-direction: column; align-items: flex-start; gap: 10px; }
   .alert-banner { margin: 0 16px 4px; }
   .header-right { width: 100%; justify-content: space-between; }
@@ -411,11 +499,13 @@ body[data-theme="light"] .card-state-text code { background: rgba(0,0,0,0.06); c
   .weather-hero-temp .temp-unit { font-size: 22px; }
   .holiday-card-content { gap: 20px; }
   .holiday-upcoming { border-left: none; border-top: 1px solid rgba(255,255,255,0.08); padding-left: 0; padding-top: 16px; }
+  .edit-grid-overlay::before { display: none; }
+  .edit-toolbar { left: 16px; right: 16px; bottom: 16px; transform: none; border-radius: 16px; justify-content: center; flex-wrap: wrap; }
 }
 
 .skeleton {
   background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%);
-  background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 8px.
+  background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 8px;
 }
 @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
 .fade-in { animation: fadeIn 0.5s ease; }
@@ -432,6 +522,7 @@ body[data-theme="light"] .card-state-text code { background: rgba(0,0,0,0.06); c
   <div class="header-right">
     <span class="status-pill" id="statusPill"><span class="status-dot"></span><span id="statusText">連線中</span></span>
     <span class="header-clock" id="clock"></span>
+    <button class="edit-mode-btn" id="editModeBtn" onclick="toggleEditMode()" title="編輯版面" aria-label="編輯版面">&#9998;</button>
     <button class="settings-btn" onclick="toggleSettings()" title="設定">&#9881;</button>
   </div>
 </div>
@@ -444,13 +535,17 @@ body[data-theme="light"] .card-state-text code { background: rgba(0,0,0,0.06); c
   </div>
 </div>
 
-<div class="dashboard">
-  <!-- 卡一：即時天氣（主卡片，跨 3 欄） -->
-  <div class="card card--hero">
+<div class="edit-grid-overlay" id="editGridOverlay"></div>
+
+<div class="dashboard" id="dashboard">
+  <!-- 卡一：即時天氣（主卡片） -->
+  <div class="card card--hero" data-card-id="weather" data-default-col="1" data-default-row="1" data-default-col-span="3" data-default-row-span="2">
     <div class="card-header">
+      <div class="drag-handle" title="拖曳移動">&#9776;</div>
       <div class="card-title"><span class="card-icon">&#9728;&#65039;</span> 列治文天氣</div>
       <button class="card-refresh" onclick="refreshCard('weather', this)" title="手動更新"><span class="refresh-icon">&#8635;</span></button>
     </div>
+    <div class="resize-handle" data-resize="weather"></div>
     <div class="card-content weather-hero" id="weather-content">
       <div class="weather-hero-top">
         <div class="weather-hero-icon" id="weather-icon">&#9728;&#65039;</div>
@@ -473,11 +568,13 @@ body[data-theme="light"] .card-state-text code { background: rgba(0,0,0,0.06); c
   </div>
 
   <!-- 卡二：九日預報 -->
-  <div class="card card--secondary">
+  <div class="card card--secondary" data-card-id="forecast" data-default-col="4" data-default-row="1" data-default-col-span="3" data-default-row-span="2">
     <div class="card-header">
+      <div class="drag-handle" title="拖曳移動">&#9776;</div>
       <div class="card-title"><span class="card-icon">&#127780;&#65039;</span> 九日天氣預報</div>
       <button class="card-refresh" onclick="refreshCard('forecast', this)" title="手動更新"><span class="refresh-icon">&#8635;</span></button>
     </div>
+    <div class="resize-handle" data-resize="forecast"></div>
     <div class="card-content">
       <div class="forecast-list" id="forecast-list">
         <div class="skeleton" style="height:80px;flex:1"></div>
@@ -487,11 +584,13 @@ body[data-theme="light"] .card-state-text code { background: rgba(0,0,0,0.06); c
   </div>
 
   <!-- 卡三：日出日落 -->
-  <div class="card card--secondary sun-card">
-    <div class="card-header" style="width:100%">
+  <div class="card card--secondary sun-card" data-card-id="sun" data-default-col="1" data-default-row="3" data-default-col-span="3" data-default-row-span="2">
+    <div class="card-header">
+      <div class="drag-handle" title="拖曳移動">&#9776;</div>
       <div class="card-title"><span class="card-icon">&#127749;</span> 日出日落</div>
       <button class="card-refresh" onclick="refreshCard('sun', this)" title="手動更新"><span class="refresh-icon">&#8635;</span></button>
     </div>
+    <div class="resize-handle" data-resize="sun"></div>
     <div class="card-content" style="align-items:center;justify-content:center;width:100%">
       <div class="sun-arc-container">
         <div class="sun-arc">
@@ -520,11 +619,13 @@ body[data-theme="light"] .card-state-text code { background: rgba(0,0,0,0.06); c
   </div>
 
   <!-- 卡四：港幣匯率 -->
-  <div class="card card--secondary">
+  <div class="card card--secondary" data-card-id="exchange" data-default-col="4" data-default-row="3" data-default-col-span="3" data-default-row-span="2">
     <div class="card-header">
+      <div class="drag-handle" title="拖曳移動">&#9776;</div>
       <div class="card-title"><span class="card-icon">&#128176;</span> 港幣匯率</div>
       <button class="card-refresh" onclick="refreshCard('exchange', this)" title="手動更新"><span class="refresh-icon">&#8635;</span></button>
     </div>
+    <div class="resize-handle" data-resize="exchange"></div>
     <div class="card-content">
       <div class="exchange-list" id="exchange-list">
         <div class="skeleton" style="height:40px"></div>
@@ -536,11 +637,13 @@ body[data-theme="light"] .card-state-text code { background: rgba(0,0,0,0.06); c
   </div>
 
   <!-- 卡五：環球市場 -->
-  <div class="card card--secondary">
+  <div class="card card--secondary" data-card-id="markets" data-default-col="1" data-default-row="5" data-default-col-span="3" data-default-row-span="2">
     <div class="card-header">
+      <div class="drag-handle" title="拖曳移動">&#9776;</div>
       <div class="card-title"><span class="card-icon">&#128200;</span> 環球市場</div>
       <button class="card-refresh" onclick="refreshCard('markets', this)" title="手動更新"><span class="refresh-icon">&#8635;</span></button>
     </div>
+    <div class="resize-handle" data-resize="markets"></div>
     <div class="card-content">
       <div class="markets-list" id="markets-list">
         <div class="skeleton" style="height:30px"></div>
@@ -554,11 +657,13 @@ body[data-theme="light"] .card-state-text code { background: rgba(0,0,0,0.06); c
   </div>
 
   <!-- 卡六：BC 省公眾假期（全寬） -->
-  <div class="card card--full">
+  <div class="card card--full" data-card-id="holidays" data-default-col="4" data-default-row="5" data-default-col-span="3" data-default-row-span="2">
     <div class="card-header">
+      <div class="drag-handle" title="拖曳移動">&#9776;</div>
       <div class="card-title"><span class="card-icon">&#127873;</span> BC 省公眾假期</div>
       <button class="card-refresh" onclick="refreshCard('holidays', this)" title="手動更新"><span class="refresh-icon">&#8635;</span></button>
     </div>
+    <div class="resize-handle" data-resize="holidays"></div>
     <div class="card-content holiday-card-content" id="holidays-content">
       <div class="holiday-main">
         <div class="holiday-countdown" id="holiday-countdown">--</div>
@@ -574,6 +679,17 @@ body[data-theme="light"] .card-state-text code { background: rgba(0,0,0,0.06); c
     </div>
     <div class="card-updated" id="holidays-updated">--</div>
   </div>
+</div>
+
+<div class="drop-indicator" id="dropIndicator"></div>
+
+<div class="edit-toolbar" id="editToolbar">
+  <span style="color:var(--text-tertiary);font-size:12px;">編輯模式</span>
+  <div class="edit-toolbar-divider"></div>
+  <button class="edit-toolbar-btn" onclick="resetLayout()">&#128472; 重設佈局</button>
+  <div class="edit-toolbar-divider"></div>
+  <button class="edit-toolbar-btn primary" onclick="saveLayout()">&#10003; 儲存並離開</button>
+  <button class="edit-toolbar-btn danger" onclick="cancelEdit()">&#10005; 取消</button>
 </div>
 
 <!-- 設定 -->
@@ -767,7 +883,233 @@ function toggleSettings(){
 }
 
 /* =========================================================
-   2. 資料層：先試本機 API，失敗則直連公開 API
+   2. 編輯模式：拖曳、拉伸、佈局持久化
+   ========================================================= */
+const GRID_COLS = 6;
+const ROW_HEIGHT = 80;
+const GAP = 16;
+let editMode = false;
+let draggedCard = null;
+let dropTarget = null;
+let resizeCard = null;
+let resizeStart = { x: 0, y: 0, col: 1, row: 1, colSpan: 1, rowSpan: 1 };
+
+function toggleEditMode(){
+  editMode = !editMode;
+  document.body.classList.toggle('edit-mode', editMode);
+  document.getElementById('editGridOverlay').classList.toggle('active', editMode);
+  document.getElementById('editModeBtn').classList.toggle('active', editMode);
+  document.getElementById('editModeBtn').textContent = editMode ? '&#10003;' : '&#9998;';
+  document.getElementById('editModeBtn').title = editMode ? '完成編輯' : '編輯版面';
+  
+  if (editMode) {
+    // 進入編輯模式：套用儲存的佈局或預設佈局
+    applySavedLayout();
+    // 移除預設佈局類別，改用 inline grid-column/row
+    document.querySelectorAll('.card').forEach(card => {
+      card.classList.remove('card--hero', 'card--secondary', 'card--full');
+    });
+  } else {
+    // 離開編輯模式：恢復預設類別（如果沒有儲存的佈局）
+    if (!localStorage.getItem('dashboard-layout')) {
+      restoreDefaultLayout();
+    }
+  }
+}
+
+function applySavedLayout(){
+  try {
+    const saved = localStorage.getItem('dashboard-layout');
+    if (saved) {
+      const layout = JSON.parse(saved);
+      Object.entries(layout).forEach(([id, pos]) => {
+        const card = document.querySelector(`[data-card-id="${id}"]`);
+        if (card) {
+          card.style.gridColumn = `${pos.col} / span ${pos.colSpan}`;
+          card.style.gridRow = `${pos.row} / span ${pos.rowSpan}`;
+        }
+      });
+      return;
+    }
+  } catch(e) {}
+  // 沒有儲存佈局，用預設
+  restoreDefaultLayout();
+}
+
+function restoreDefaultLayout(){
+  document.querySelectorAll('.card').forEach(card => {
+    const col = parseInt(card.dataset.defaultCol) || 1;
+    const row = parseInt(card.dataset.defaultRow) || 1;
+    const colSpan = parseInt(card.dataset.defaultColSpan) || 1;
+    const rowSpan = parseInt(card.dataset.defaultRowSpan) || 1;
+    card.style.gridColumn = `${col} / span ${colSpan}`;
+    card.style.gridRow = `${row} / span ${rowSpan}`;
+  });
+}
+
+function saveLayout(){
+  const layout = {};
+  document.querySelectorAll('.card').forEach(card => {
+    const id = card.dataset.cardId;
+    const style = window.getComputedStyle(card);
+    const gridCol = style.gridColumn; // "1 / span 3"
+    const gridRow = style.gridRow;
+    const colMatch = gridCol.match(/(\d+)\s*\/\s*span\s*(\d+)/);
+    const rowMatch = gridRow.match(/(\d+)\s*\/\s*span\s*(\d+)/);
+    if (colMatch && rowMatch) {
+      layout[id] = {
+        col: parseInt(colMatch[1]),
+        colSpan: parseInt(colMatch[2]),
+        row: parseInt(rowMatch[1]),
+        rowSpan: parseInt(rowMatch[2])
+      };
+    }
+  });
+  localStorage.setItem('dashboard-layout', JSON.stringify(layout));
+  toggleEditMode();
+}
+
+function cancelEdit(){
+  // 還原到儲存的佈局或預設
+  if (localStorage.getItem('dashboard-layout')) {
+    applySavedLayout();
+  } else {
+    restoreDefaultLayout();
+  }
+  toggleEditMode();
+}
+
+function resetLayout(){
+  localStorage.removeItem('dashboard-layout');
+  restoreDefaultLayout();
+}
+
+/* ----- 拖曳移動 ----- */
+function initDragDrop(){
+  const dashboard = document.getElementById('dashboard');
+  const dropIndicator = document.getElementById('dropIndicator');
+  
+  document.querySelectorAll('.drag-handle').forEach(handle => {
+    handle.addEventListener('pointerdown', onDragStart);
+  });
+  
+  function onDragStart(e){
+    if (!editMode) return;
+    e.preventDefault();
+    e.stopPropagation();
+    draggedCard = e.target.closest('.card');
+    draggedCard.classList.add('dragging');
+    draggedCard.setPointerCapture(e.pointerId);
+    
+    const rect = draggedCard.getBoundingClientRect();
+    const dashRect = dashboard.getBoundingClientRect();
+    
+    document.addEventListener('pointermove', onDragMove);
+    document.addEventListener('pointerup', onDragEnd);
+    
+    function onDragMove(e){
+      const x = e.clientX - dashRect.left;
+      const y = e.clientY - dashRect.top;
+      
+      // 計算最近的格位
+      const col = Math.max(1, Math.min(GRID_COLS, Math.round(x / (dashRect.width / GRID_COLS)) + 1));
+      const row = Math.max(1, Math.round(y / (ROW_HEIGHT + GAP)) + 1);
+      
+      // 顯示放置指示器
+      const cardRect = draggedCard.getBoundingClientRect();
+      const colSpan = parseInt(draggedCard.style.gridColumn.split('span')[1]) || 1;
+      const rowSpan = parseInt(draggedCard.style.gridRow.split('span')[1]) || 1;
+      
+      const indicatorLeft = (col - 1) * (dashRect.width / GRID_COLS);
+      const indicatorTop = (row - 1) * (ROW_HEIGHT + GAP);
+      const indicatorWidth = colSpan * (dashRect.width / GRID_COLS) - GAP;
+      const indicatorHeight = rowSpan * (ROW_HEIGHT + GAP) - GAP;
+      
+      dropIndicator.style.left = indicatorLeft + 'px';
+      dropIndicator.style.top = indicatorTop + 'px';
+      dropIndicator.style.width = indicatorWidth + 'px';
+      dropIndicator.style.height = indicatorHeight + 'px';
+      dropIndicator.classList.add('active');
+      
+      dropTarget = { col, row };
+    }
+    
+    function onDragEnd(e){
+      document.removeEventListener('pointermove', onDragMove);
+      document.removeEventListener('pointerup', onDragEnd);
+      draggedCard.releasePointerCapture(e.pointerId);
+      draggedCard.classList.remove('dragging');
+      dropIndicator.classList.remove('active');
+      
+      if (dropTarget) {
+        const colSpan = parseInt(draggedCard.style.gridColumn.split('span')[1]) || 1;
+        const rowSpan = parseInt(draggedCard.style.gridRow.split('span')[1]) || 1;
+        // 確保不超出邊界
+        const finalCol = Math.min(dropTarget.col, GRID_COLS - colSpan + 1);
+        const finalRow = Math.max(1, dropTarget.row);
+        draggedCard.style.gridColumn = `${finalCol} / span ${colSpan}`;
+        draggedCard.style.gridRow = `${finalRow} / span ${rowSpan}`;
+      }
+      draggedCard = null;
+      dropTarget = null;
+    }
+  }
+}
+
+/* ----- 拉伸改大小 ----- */
+function initResize(){
+  document.querySelectorAll('.resize-handle').forEach(handle => {
+    handle.addEventListener('pointerdown', onResizeStart);
+  });
+  
+  function onResizeStart(e){
+    if (!editMode) return;
+    e.preventDefault();
+    e.stopPropagation();
+    resizeCard = e.target.closest('.card');
+    resizeCard.classList.add('resizing');
+    resizeCard.setPointerCapture(e.pointerId);
+    
+    const style = window.getComputedStyle(resizeCard);
+    const colMatch = style.gridColumn.match(/(\d+)\s*\/\s*span\s*(\d+)/);
+    const rowMatch = style.gridRow.match(/(\d+)\s*\/\s*span\s*(\d+)/);
+    resizeStart = {
+      x: e.clientX, y: e.clientY,
+      col: colMatch ? parseInt(colMatch[1]) : 1,
+      row: rowMatch ? parseInt(rowMatch[1]) : 1,
+      colSpan: colMatch ? parseInt(colMatch[2]) : 1,
+      rowSpan: rowMatch ? parseInt(rowMatch[2]) : 1
+    };
+    
+    document.addEventListener('pointermove', onResizeMove);
+    document.addEventListener('pointerup', onResizeEnd);
+    
+    function onResizeMove(e){
+      const dx = e.clientX - resizeStart.x;
+      const dy = e.clientY - resizeStart.y;
+      const dashRect = document.getElementById('dashboard').getBoundingClientRect();
+      const colWidth = dashRect.width / GRID_COLS;
+      
+      let newColSpan = Math.max(1, Math.min(GRID_COLS - resizeStart.col + 1, 
+        Math.round(resizeStart.colSpan + dx / colWidth)));
+      let newRowSpan = Math.max(1, Math.round(resizeStart.rowSpan + dy / (ROW_HEIGHT + GAP)));
+      
+      resizeCard.style.gridColumn = `${resizeStart.col} / span ${newColSpan}`;
+      resizeCard.style.gridRow = `${resizeStart.row} / span ${newRowSpan}`;
+    }
+    
+    function onResizeEnd(e){
+      document.removeEventListener('pointermove', onResizeMove);
+      document.removeEventListener('pointerup', onResizeEnd);
+      resizeCard.releasePointerCapture(e.pointerId);
+      resizeCard.classList.remove('resizing');
+      resizeCard = null;
+    }
+  }
+}
+
+/* =========================================================
+   3. 資料層：先試本機 API，失敗則直連公開 API
    ========================================================= */
 let mode = 'unknown';
 let sunData = null;
@@ -1090,7 +1432,7 @@ function renderMarkets(markets){
 }
 
 /* =========================================================
-   3. 更新控制
+   4. 更新控制
    ========================================================= */
 function setUpdatedTime(id){
   const d = new Date();
@@ -1148,7 +1490,7 @@ function refreshCard(name, btn){
 function reconnectAll(){ refreshAll(true); }
 
 /* =========================================================
-   4. 時鐘 / 招呼語
+   5. 時鐘 / 招呼語
    ========================================================= */
 function updateGreeting(){
   const h = new Date().getHours();
@@ -1167,7 +1509,7 @@ function updateClock(){
 }
 
 /* =========================================================
-   5. 自動更新
+   6. 自動更新
    ========================================================= */
 let autoTimer = null;
 function setupAutoRefresh(){
@@ -1178,7 +1520,7 @@ function setupAutoRefresh(){
 }
 
 /* =========================================================
-   6. 啟動
+   7. 啟動
    ========================================================= */
 document.addEventListener('change', e => {
   if (e.target.closest('.settings-modal')) saveSettings();
@@ -1215,6 +1557,18 @@ async function init(){
   setInterval(() => {
     if (sunData) renderSun(sunData[0], sunData[1]);
   }, 60000);
+
+  // 初始化編輯模式功能
+  initDragDrop();
+  initResize();
+  
+  // 載入儲存的佈局（非編輯模式也要套用）
+  if (localStorage.getItem('dashboard-layout')) {
+    applySavedLayout();
+    document.querySelectorAll('.card').forEach(card => {
+      card.classList.remove('card--hero', 'card--secondary', 'card--full');
+    });
+  }
 }
 
 init();
