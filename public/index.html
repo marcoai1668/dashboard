@@ -20,9 +20,13 @@
   --accent-red: #FF453A;
   --accent-orange: #FF9F0A;
   --accent-purple: #BF5AF2;
-  --radius: 20px;
+  --radius-lg: 24px;
+  --radius-md: 18px;
+  --radius-sm: 14px;
   --blur: 40px;
   --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --gap: 16px;
+  --header-h: 72px;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -36,12 +40,10 @@ body {
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
-  /* 內容比視窗矮時垂直居中，避免底部一大片空白；內容過高時自動靠上 */
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: safe center;
-  /* 底部留白比頂部多，令內容整體上移，減少頂部空位 */
+  justify-content: flex-start;
   padding-bottom: 12vh;
 }
 
@@ -65,7 +67,7 @@ body::after {
   position: relative; z-index: 1;
   display: flex; justify-content: space-between; align-items: center;
   padding: 16px 32px 10px;
-  width: 100%; max-width: 1320px;
+  width: 100%; max-width: 1400px;
 }
 .header-left h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
 .header-left p { font-size: 15px; color: var(--text-secondary); margin-top: 2px; }
@@ -87,7 +89,7 @@ body::after {
 .status-dot {
   width: 6px; height: 6px; border-radius: 50%;
   background: currentColor;
-  box-shadow: 0 0 8px currentColor;
+  box-shadow: 0 0 8px currentColor.
 }
 .status-pill.offline .status-dot { animation: pulse 1.6s infinite; }
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.25} }
@@ -102,7 +104,7 @@ body::after {
   border-radius: 50%; width: 36px; height: 36px;
   display: flex; align-items: center; justify-content: center;
   cursor: pointer; transition: var(--transition);
-  backdrop-filter: blur(var(--blur)); color: var(--text-primary); font-size: 18px;
+  backdrop-filter: blur(var(--blur)); color: var(--text-primary); font-size: 18px.
 }
 .settings-btn:hover { background: var(--card-hover); transform: scale(1.05); }
 
@@ -135,22 +137,36 @@ body::after {
 }
 .banner-btn:hover { background: rgba(255,255,255,0.2); }
 
-/* ===== 版面 ===== */
+/* ===== 主版面：Grid 定義區域 ===== */
 .dashboard {
   position: relative; z-index: 1;
-  display: grid; grid-template-columns: repeat(3, 1fr);
-  gap: 14px; padding: 10px 32px 28px;
-  width: 100%; max-width: 1320px;
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  grid-template-rows: auto auto auto;
+  gap: var(--gap);
+  padding: 10px 32px 28px;
+  width: 100%; max-width: 1400px;
 }
+
+/* 區域命名：
+   weather-main   : col 1-3, row 1
+   weather-today  : col 4-6, row 1  (即時卡片右側放「今日高低/降雨」與快速資訊)
+   forecast       : col 1-3, row 2
+   sun            : col 4-6, row 2
+   exchange       : col 1-3, row 3
+   markets        : col 4-6, row 3
+   holidays       : col 1-6, row 4 (全寬)
+*/
 
 .card {
   background: var(--card-bg);
   backdrop-filter: blur(var(--blur)); -webkit-backdrop-filter: blur(var(--blur));
   border: 1px solid var(--card-border);
-  border-radius: 18px; padding: 18px 20px;
+  border-radius: var(--radius-md); padding: 20px 22px;
   transition: var(--transition);
   position: relative; overflow: hidden;
-  min-height: 196px; display: flex; flex-direction: column;
+  display: flex; flex-direction: column;
+  min-height: 180px;
 }
 .card:hover {
   background: var(--card-hover);
@@ -158,12 +174,33 @@ body::after {
   transform: translateY(-2px);
 }
 
-.card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+/* 主卡片：即時天氣 —— 跨 3 欄，row 1 */
+.card--hero {
+  grid-column: 1 / 4;
+  grid-row: 1;
+  min-height: 220px;
+  padding: 24px 28px;
+}
+
+/* 次要卡片：預報、日出日落、匯率、市場 —— 各 3 欄 */
+.card--secondary {
+  grid-column: span 3;
+  min-height: 170px;
+}
+
+/* 假期卡片：全寬 */
+.card--full {
+  grid-column: 1 / -1;
+  min-height: 160px;
+}
+
+.card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
 .card-title {
   display: flex; align-items: center; gap: 8px;
-  font-size: 13px; font-weight: 600; color: var(--text-secondary);
-  letter-spacing: 1px;
+  font-size: 12px; font-weight: 600; color: var(--text-secondary);
+  letter-spacing: 1px; text-transform: uppercase;
 }
+.card--hero .card-title { font-size: 13px; }
 .card-icon { font-size: 16px; }
 .card-refresh {
   background: transparent; border: none; color: var(--text-tertiary);
@@ -176,117 +213,133 @@ body::after {
 @keyframes spin { from{transform:rotate(0)} to{transform:rotate(360deg)} }
 
 .card-content { flex: 1; display: flex; flex-direction: column; }
-.card-updated { font-size: 10.5px; color: var(--text-tertiary); margin-top: 8px; text-align: right; }
+.card-updated { font-size: 10px; color: var(--text-tertiary); margin-top: 8px; text-align: right; }
 
 /* 空白／錯誤狀態 */
 .card-state {
   flex: 1; display: flex; flex-direction: column;
   align-items: center; justify-content: center;
-  gap: 8px; text-align: center; padding: 16px 4px;
+  gap: 8px; text-align: center; padding: 16px 4px.
 }
 .card-state-icon { font-size: 26px; opacity: 0.55; }
 .card-state-text { font-size: 12.5px; color: var(--text-tertiary); line-height: 1.7; }
 .card-state-text b { color: var(--text-secondary); font-weight: 600; }
 
-/* ===== 天氣 ===== */
-.weather-current { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 12px; }
-.weather-icon { font-size: 44px; line-height: 1; }
-.weather-temp { display: flex; align-items: baseline; gap: 2px; }
-.weather-temp .temp-value { font-size: 40px; font-weight: 300; letter-spacing: -1px; }
-.weather-temp .temp-unit { font-size: 17px; font-weight: 300; color: var(--text-secondary); }
-.weather-desc { font-size: 13px; color: var(--text-secondary); margin-top: 2px; }
-.weather-details { display: flex; gap: 18px; font-size: 13px; }
-.weather-detail-item { display: flex; flex-direction: column; gap: 1px; }
-.weather-detail-label { color: var(--text-tertiary); font-size: 10.5px; }
-.weather-detail-value { color: var(--text-primary); font-weight: 500; font-size: 13px; }
-
-/* 今日高低温／降雨機率：填補卡片底部空白 */
-.weather-today {
-  display: flex; gap: 16px; align-items: center;
-  margin-top: auto; padding-top: 10px;
-  border-top: 1px solid rgba(255,255,255,0.07);
-  font-size: 12px; color: var(--text-secondary);
+/* ===== 主卡片：即時天氣 ===== */
+.weather-hero {
+  display: flex; flex-direction: column; height: 100%;
 }
-.weather-today b { color: var(--text-primary); font-weight: 600; }
-.weather-today .wt-sep { color: var(--text-tertiary); }
+.weather-hero-top {
+  display: flex; align-items: flex-start; gap: 24px;
+  flex: 1; min-height: 140px;
+}
+.weather-hero-icon { font-size: 84px; line-height: 1; flex-shrink: 0; }
+.weather-hero-main { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+.weather-hero-temp {
+  display: flex; align-items: baseline; gap: 4px;
+  font-size: 64px; font-weight: 200; letter-spacing: -2px; line-height: 1;
+}
+.weather-hero-temp .temp-unit { font-size: 28px; font-weight: 200; color: var(--text-secondary); }
+.weather-hero-desc { font-size: 16px; color: var(--text-secondary); margin-top: 6px; font-weight: 400; }
+.weather-hero-details {
+  display: flex; gap: 28px; margin-top: 16px; flex-wrap: wrap;
+}
+.weather-hero-detail {
+  display: flex; flex-direction: column; gap: 2px;
+}
+.weather-hero-detail-label { color: var(--text-tertiary); font-size: 11px; }
+.weather-hero-detail-value { color: var(--text-primary); font-weight: 500; font-size: 15px; }
+
+/* 今日高低溫/降雨 —— 放在 hero 右側或底部視寬度 */
+.weather-today-bar {
+  display: flex; gap: 20px; align-items: center;
+  margin-top: auto; padding-top: 16px;
+  border-top: 1px solid rgba(255,255,255,0.07);
+  font-size: 13px; color: var(--text-secondary);
+}
+.weather-today-bar b { color: var(--text-primary); font-weight: 600; }
+.weather-today-bar .wt-sep { color: var(--text-tertiary); }
 
 /* ===== 預報 ===== */
-.forecast-list { display: flex; gap: 3px; overflow-x: auto; padding-bottom: 2px; margin: auto 0; }
+.forecast-list { display: flex; gap: 4px; overflow-x: auto; padding-bottom: 4px; margin: auto 0; flex: 1; }
 .forecast-list::-webkit-scrollbar { height: 4px; }
 .forecast-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
-.forecast-day { flex: 1; min-width: 0; text-align: center; padding: 8px 2px; border-radius: 10px; transition: var(--transition); }
+.forecast-day { flex: 1; min-width: 0; text-align: center; padding: 10px 4px; border-radius: 10px; transition: var(--transition); }
 .forecast-day:hover { background: rgba(255,255,255,0.06); }
 .forecast-day .day-name { font-size: 10px; color: var(--text-tertiary); margin-bottom: 6px; white-space: nowrap; }
-.forecast-day .day-icon { font-size: 22px; margin-bottom: 6px; }
-.forecast-day .day-temps { font-size: 11px; font-weight: 500; }
+.forecast-day .day-icon { font-size: 24px; margin-bottom: 6px; }
+.forecast-day .day-temps { font-size: 12px; font-weight: 500; }
 .forecast-day .day-high { color: var(--text-primary); }
 .forecast-day .day-low { color: var(--text-tertiary); }
 .forecast-day .day-precip { font-size: 9px; color: var(--accent-blue); margin-top: 3px; }
 .forecast-day.today { background: rgba(10,132,255,0.15); }
 
 /* ===== 匯率 ===== */
-.exchange-list { display: flex; flex-direction: column; gap: 10px; flex: 1; justify-content: center; }
+.exchange-list { display: flex; flex-direction: column; gap: 12px; flex: 1; justify-content: center; }
 .exchange-item {
   display: flex; justify-content: space-between; align-items: center;
-  padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.06);
+  padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.06);
 }
 .exchange-item:last-child { border-bottom: none; }
-.exchange-currency { display: flex; align-items: center; gap: 10px; }
-.exchange-flag { font-size: 24px; }
+.exchange-currency { display: flex; align-items: center; gap: 12px; }
+.exchange-flag { font-size: 26px; }
 .exchange-info { display: flex; flex-direction: column; }
-.exchange-code { font-size: 15px; font-weight: 600; }
+.exchange-code { font-size: 16px; font-weight: 600; }
 .exchange-name { font-size: 11px; color: var(--text-tertiary); }
 .exchange-value { text-align: right; }
-.exchange-rate { font-size: 18px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.exchange-rate { font-size: 20px; font-weight: 500; font-variant-numeric: tabular-nums; }
 .exchange-unit { font-size: 11px; color: var(--text-tertiary); }
 
 /* ===== 假期 ===== */
-.holiday-main { text-align: center; padding: 2px 0; }.holiday-countdown {
-  font-size: 46px; font-weight: 200; letter-spacing: -2px; line-height: 1;
+.holiday-card-content { display: flex; gap: 32px; align-items: center; justify-content: center; flex-wrap: wrap; }
+.holiday-main { text-align: center; padding: 4px 0; flex: 1; min-width: 200px; }
+.holiday-countdown {
+  font-size: 56px; font-weight: 200; letter-spacing: -3px; line-height: 1;
   background: linear-gradient(135deg, var(--accent-orange), var(--accent-purple));
   -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
 }
-.holiday-days-label { font-size: 13px; color: var(--text-secondary); margin-top: 2px; }
-.holiday-name { font-size: 16px; font-weight: 600; margin-top: 8px; }
-.holiday-date { font-size: 12px; color: var(--text-tertiary); margin-top: 2px; }
-.holiday-type-badge { display: inline-block; font-size: 10px; padding: 2px 8px; border-radius: 8px; margin-top: 6px; }
-.holiday-upcoming { margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 8px; }
-.holiday-upcoming-item { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-tertiary); padding: 2px 0; }
+.holiday-days-label { font-size: 14px; color: var(--text-secondary); margin-top: 4px; }
+.holiday-name { font-size: 18px; font-weight: 600; margin-top: 10px; }
+.holiday-date { font-size: 13px; color: var(--text-tertiary); margin-top: 4px; }
+.holiday-type-badge { display: inline-block; font-size: 10px; padding: 3px 10px; border-radius: 8px; margin-top: 8px; }
+.holiday-upcoming { flex: 1; min-width: 220px; border-left: 1px solid rgba(255,255,255,0.08); padding-left: 24px; }
+.holiday-upcoming-title { font-size: 11px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+.holiday-upcoming-item { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-tertiary); padding: 6px 0; }
+.holiday-upcoming-item span:first-child { color: var(--text-secondary); font-weight: 500; }
 
 /* ===== 日出日落 ===== */
 .sun-card { justify-content: center; align-items: center; }
-.sun-card .card-content { justify-content: center; }
-.sun-arc-container { position: relative; width: 100%; height: 84px; display: flex; justify-content: center; align-items: flex-end; margin: 4px 0 0; }
-.sun-arc { width: 168px; height: 84px; position: relative; }
+.sun-card .card-content { justify-content: center; align-items: center; width: 100%; }
+.sun-arc-container { position: relative; width: 100%; max-width: 280px; height: 100px; display: flex; justify-content: center; align-items: flex-end; margin: 8px 0 0; }
+.sun-arc { width: 100%; height: 100%; position: relative; }
 .sun-arc svg { width: 100%; height: 100%; }
 .sun-dot {
-  position: absolute; width: 14px; height: 14px;
+  position: absolute; width: 16px; height: 16px;
   background: var(--accent-orange); border-radius: 50%;
-  box-shadow: 0 0 20px rgba(255,159,10,0.6);
-  transform: translate(-50%, -50%); transition: all 0.5s ease;
+  box-shadow: 0 0 24px rgba(255,159,10,0.7);
+  transform: translate(-50%, -50%); transition: all 0.5s ease.
 }
-.sun-times { display: flex; justify-content: space-between; width: 100%; max-width: 210px; margin-top: 6px; }
-.sun-time { text-align: center; }
-.sun-time-icon { font-size: 17px; margin-bottom: 2px; }
-.sun-time-value { font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; }
-.sun-time-label { font-size: 10.5px; color: var(--text-tertiary); margin-top: 1px; }
-.sun-duration { text-align: center; margin-top: 8px; }
-.sun-duration-value { font-size: 13px; color: var(--text-secondary); }
+.sun-times { display: flex; justify-content: space-between; width: 100%; max-width: 320px; margin-top: 10px; }
+.sun-time { text-align: center; flex: 1; }
+.sun-time-icon { font-size: 20px; margin-bottom: 4px; }
+.sun-time-value { font-size: 17px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.sun-time-label { font-size: 10.5px; color: var(--text-tertiary); margin-top: 2px; }
+.sun-duration { text-align: center; margin-top: 10px; width: 100%; }
+.sun-duration-value { font-size: 14px; color: var(--text-secondary); }
 
 /* ===== 市場 ===== */
-.markets-list { display: flex; flex-direction: column; gap: 4px; flex: 1; justify-content: center; }
+.markets-list { display: flex; flex-direction: column; gap: 6px; flex: 1; justify-content: center; }
 .market-item {
   display: flex; justify-content: space-between; align-items: center;
-  padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.06);
+  padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.06);
 }
 .market-item:last-child { border-bottom: none; }
-.market-info { display: flex; flex-direction: column; gap: 1px; }
-.market-name { font-size: 13px; font-weight: 600; }
+.market-info { display: flex; flex-direction: column; gap: 2px; }
+.market-name { font-size: 14px; font-weight: 600; }
 .market-symbol { font-size: 10px; color: var(--text-tertiary); }
-.market-data { text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
-.market-price { font-size: 16px; font-weight: 500; font-variant-numeric: tabular-nums; }
-.market-change { font-size: 12px; font-weight: 500; font-variant-numeric: tabular-nums; display: flex; align-items: center; gap: 3px; }
-/* 升＝綠色、跌＝紅色（西式慣例） */
+.market-data { text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
+.market-price { font-size: 18px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.market-change { font-size: 13px; font-weight: 500; font-variant-numeric: tabular-nums; display: flex; align-items: center; gap: 3px; }
 .market-change.up { color: var(--accent-green); }
 .market-change.down { color: var(--accent-red); }
 .market-change.flat { color: var(--text-tertiary); }
@@ -295,13 +348,13 @@ body::after {
 .settings-overlay {
   position: fixed; inset: 0;
   background: rgba(0,0,0,0.5); backdrop-filter: blur(10px);
-  z-index: 100; display: none; align-items: center; justify-content: center;
+  z-index: 100; display: none; align-items: center; justify-content: center.
 }
 .settings-overlay.active { display: flex; }
 .settings-modal {
   background: rgba(30,30,50,0.92); backdrop-filter: blur(40px);
   border: 1px solid var(--card-border); border-radius: 24px;
-  padding: 32px; width: 90%; max-width: 480px; max-height: 80vh; overflow-y: auto;
+  padding: 32px; width: 90%; max-width: 480px; max-height: 80vh; overflow-y: auto.
 }
 .settings-modal h2 { font-size: 20px; margin-bottom: 20px; }
 .settings-section { margin-bottom: 20px; }
@@ -311,7 +364,7 @@ body::after {
 .settings-option select, .settings-option input {
   background: rgba(255,255,255,0.1); border: 1px solid var(--card-border);
   border-radius: 8px; color: var(--text-primary); padding: 6px 12px; font-size: 14px; outline: none;
-  font-family: inherit;
+  font-family: inherit.
 }
 .settings-option select:focus, .settings-option input:focus { border-color: var(--accent-blue); }
 .toggle { position: relative; width: 44px; height: 26px; background: rgba(255,255,255,0.1); border-radius: 13px; cursor: pointer; transition: var(--transition); flex-shrink: 0; }
@@ -321,7 +374,7 @@ body::after {
 .settings-close {
   background: var(--accent-blue); color: white; border: none; border-radius: 12px;
   padding: 10px 24px; font-size: 15px; font-weight: 600; cursor: pointer;
-  transition: var(--transition); width: 100%; margin-top: 8px; font-family: inherit;
+  transition: var(--transition); width: 100%; margin-top: 8px; font-family: inherit.
 }
 .settings-close:hover { opacity: 0.9; }
 .settings-attribution { text-align: center; font-size: 11px; color: var(--text-tertiary); margin-top: 16px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.06); }
@@ -340,17 +393,29 @@ body[data-theme="light"] .settings-attribution { border-color: rgba(0,0,0,0.08);
 body[data-theme="light"] .card-state-text code { background: rgba(0,0,0,0.06); color: #0066CC; padding: 1px 5px; border-radius: 4px; }
 
 /* ===== 響應式 ===== */
-@media (max-width: 1024px) { .dashboard { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 700px) {
-  .dashboard { grid-template-columns: 1fr; padding: 16px; }
+@media (max-width: 1100px) {
+  .dashboard { grid-template-columns: repeat(4, 1fr); }
+  .card--hero { grid-column: 1 / -1; }
+  .card--secondary { grid-column: span 2; }
+  .card--full { grid-column: 1 / -1; }
+}
+@media (max-width: 760px) {
+  .dashboard { grid-template-columns: 1fr; padding: 16px; gap: 12px; }
+  .card--hero, .card--secondary, .card--full { grid-column: 1; min-height: auto; }
   .header { padding: 20px 16px 12px; flex-direction: column; align-items: flex-start; gap: 10px; }
   .alert-banner { margin: 0 16px 4px; }
   .header-right { width: 100%; justify-content: space-between; }
+  .weather-hero-top { gap: 16px; }
+  .weather-hero-icon { font-size: 64px; }
+  .weather-hero-temp { font-size: 48px; }
+  .weather-hero-temp .temp-unit { font-size: 22px; }
+  .holiday-card-content { gap: 20px; }
+  .holiday-upcoming { border-left: none; border-top: 1px solid rgba(255,255,255,0.08); padding-left: 0; padding-top: 16px; }
 }
 
 .skeleton {
   background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%);
-  background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 8px;
+  background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 8px.
 }
 @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
 .fade-in { animation: fadeIn 0.5s ease; }
@@ -380,35 +445,35 @@ body[data-theme="light"] .card-state-text code { background: rgba(0,0,0,0.06); c
 </div>
 
 <div class="dashboard">
-  <!-- 卡一：即時天氣 -->
-  <div class="card">
+  <!-- 卡一：即時天氣（主卡片，跨 3 欄） -->
+  <div class="card card--hero">
     <div class="card-header">
       <div class="card-title"><span class="card-icon">&#9728;&#65039;</span> 列治文天氣</div>
       <button class="card-refresh" onclick="refreshCard('weather', this)" title="手動更新"><span class="refresh-icon">&#8635;</span></button>
     </div>
-    <div class="card-content" id="weather-content">
-      <div class="weather-current">
-        <div class="weather-icon" id="weather-icon">&#9728;&#65039;</div>
-        <div>
-          <div class="weather-temp">
+    <div class="card-content weather-hero" id="weather-content">
+      <div class="weather-hero-top">
+        <div class="weather-hero-icon" id="weather-icon">&#9728;&#65039;</div>
+        <div class="weather-hero-main">
+          <div class="weather-hero-temp">
             <span class="temp-value" id="weather-temp">--</span>
             <span class="temp-unit" id="weather-unit">&#176;C</span>
           </div>
-          <div class="weather-desc" id="weather-desc">載入中…</div>
+          <div class="weather-hero-desc" id="weather-desc">載入中…</div>
+          <div class="weather-hero-details">
+            <div class="weather-hero-detail"><span class="weather-hero-detail-label">體感溫度</span><span class="weather-hero-detail-value" id="weather-feels">--</span></div>
+            <div class="weather-hero-detail"><span class="weather-hero-detail-label">濕度</span><span class="weather-hero-detail-value" id="weather-humidity">--</span></div>
+            <div class="weather-hero-detail"><span class="weather-hero-detail-label">風速</span><span class="weather-hero-detail-value" id="weather-wind">--</span></div>
+          </div>
         </div>
       </div>
-      <div class="weather-details">
-        <div class="weather-detail-item"><span class="weather-detail-label">體感溫度</span><span class="weather-detail-value" id="weather-feels">--</span></div>
-        <div class="weather-detail-item"><span class="weather-detail-label">濕度</span><span class="weather-detail-value" id="weather-humidity">--</span></div>
-        <div class="weather-detail-item"><span class="weather-detail-label">風速</span><span class="weather-detail-value" id="weather-wind">--</span></div>
-      </div>
-      <div class="weather-today" id="weather-today"></div>
+      <div class="weather-today-bar" id="weather-today"></div>
     </div>
     <div class="card-updated" id="weather-updated">--</div>
   </div>
 
   <!-- 卡二：九日預報 -->
-  <div class="card">
+  <div class="card card--secondary">
     <div class="card-header">
       <div class="card-title"><span class="card-icon">&#127780;&#65039;</span> 九日天氣預報</div>
       <button class="card-refresh" onclick="refreshCard('forecast', this)" title="手動更新"><span class="refresh-icon">&#8635;</span></button>
@@ -421,48 +486,13 @@ body[data-theme="light"] .card-state-text code { background: rgba(0,0,0,0.06); c
     <div class="card-updated" id="forecast-updated">--</div>
   </div>
 
-  <!-- 卡三：匯率 -->
-  <div class="card">
-    <div class="card-header">
-      <div class="card-title"><span class="card-icon">&#128176;</span> 港幣匯率</div>
-      <button class="card-refresh" onclick="refreshCard('exchange', this)" title="手動更新"><span class="refresh-icon">&#8635;</span></button>
-    </div>
-    <div class="card-content">
-      <div class="exchange-list" id="exchange-list">
-        <div class="skeleton" style="height:40px"></div>
-        <div class="skeleton" style="height:40px"></div>
-        <div class="skeleton" style="height:40px"></div>
-      </div>
-    </div>
-    <div class="card-updated" id="exchange-updated">--</div>
-  </div>
-
-  <!-- 卡四：公眾假期 -->
-  <div class="card">
-    <div class="card-header">
-      <div class="card-title"><span class="card-icon">&#127873;</span> BC 省公眾假期</div>
-      <button class="card-refresh" onclick="refreshCard('holidays', this)" title="手動更新"><span class="refresh-icon">&#8635;</span></button>
-    </div>
-    <div class="card-content" id="holidays-content">
-      <div class="holiday-main">
-        <div class="holiday-countdown" id="holiday-countdown">--</div>
-        <div class="holiday-days-label" id="holiday-days-label">日後</div>
-        <div class="holiday-name" id="holiday-name">載入中…</div>
-        <div class="holiday-date" id="holiday-date"></div>
-        <div class="holiday-type-badge" id="holiday-type"></div>
-      </div>
-      <div class="holiday-upcoming" id="holiday-upcoming"></div>
-    </div>
-    <div class="card-updated" id="holidays-updated">--</div>
-  </div>
-
-  <!-- 卡五：日出日落 -->
-  <div class="card sun-card">
+  <!-- 卡三：日出日落 -->
+  <div class="card card--secondary sun-card">
     <div class="card-header" style="width:100%">
       <div class="card-title"><span class="card-icon">&#127749;</span> 日出日落</div>
       <button class="card-refresh" onclick="refreshCard('sun', this)" title="手動更新"><span class="refresh-icon">&#8635;</span></button>
     </div>
-    <div class="card-content" style="align-items:center">
+    <div class="card-content" style="align-items:center;justify-content:center;width:100%">
       <div class="sun-arc-container">
         <div class="sun-arc">
           <svg viewBox="0 0 180 90">
@@ -489,8 +519,24 @@ body[data-theme="light"] .card-state-text code { background: rgba(0,0,0,0.06); c
     <div class="card-updated" id="sun-updated">--</div>
   </div>
 
-  <!-- 卡六：環球市場 -->
-  <div class="card">
+  <!-- 卡四：港幣匯率 -->
+  <div class="card card--secondary">
+    <div class="card-header">
+      <div class="card-title"><span class="card-icon">&#128176;</span> 港幣匯率</div>
+      <button class="card-refresh" onclick="refreshCard('exchange', this)" title="手動更新"><span class="refresh-icon">&#8635;</span></button>
+    </div>
+    <div class="card-content">
+      <div class="exchange-list" id="exchange-list">
+        <div class="skeleton" style="height:40px"></div>
+        <div class="skeleton" style="height:40px"></div>
+        <div class="skeleton" style="height:40px"></div>
+      </div>
+    </div>
+    <div class="card-updated" id="exchange-updated">--</div>
+  </div>
+
+  <!-- 卡五：環球市場 -->
+  <div class="card card--secondary">
     <div class="card-header">
       <div class="card-title"><span class="card-icon">&#128200;</span> 環球市場</div>
       <button class="card-refresh" onclick="refreshCard('markets', this)" title="手動更新"><span class="refresh-icon">&#8635;</span></button>
@@ -505,6 +551,28 @@ body[data-theme="light"] .card-state-text code { background: rgba(0,0,0,0.06); c
       </div>
     </div>
     <div class="card-updated" id="markets-updated">--</div>
+  </div>
+
+  <!-- 卡六：BC 省公眾假期（全寬） -->
+  <div class="card card--full">
+    <div class="card-header">
+      <div class="card-title"><span class="card-icon">&#127873;</span> BC 省公眾假期</div>
+      <button class="card-refresh" onclick="refreshCard('holidays', this)" title="手動更新"><span class="refresh-icon">&#8635;</span></button>
+    </div>
+    <div class="card-content holiday-card-content" id="holidays-content">
+      <div class="holiday-main">
+        <div class="holiday-countdown" id="holiday-countdown">--</div>
+        <div class="holiday-days-label" id="holiday-days-label">日後</div>
+        <div class="holiday-name" id="holiday-name">載入中…</div>
+        <div class="holiday-date" id="holiday-date"></div>
+        <div class="holiday-type-badge" id="holiday-type"></div>
+      </div>
+      <div class="holiday-upcoming">
+        <div class="holiday-upcoming-title">即將到來</div>
+        <div id="holiday-upcoming"></div>
+      </div>
+    </div>
+    <div class="card-updated" id="holidays-updated">--</div>
   </div>
 </div>
 
@@ -556,7 +624,6 @@ body[data-theme="light"] .card-state-text code { background: rgba(0,0,0,0.06); c
 const RICHMOND_LAT = 49.17;
 const RICHMOND_LON = -123.13;
 
-// 前端內置 BC 省假期表（離線亦可計算倒數）
 const BC_HOLIDAYS = [
   { date:'2026-01-01', name:'元旦', type:'聯邦' },
   { date:'2026-02-16', name:'家庭日', type:'BC 省' },
@@ -584,7 +651,6 @@ const BC_HOLIDAYS = [
   { date:'2027-12-27', name:'節禮日（補假）', type:'非強制' },
 ];
 
-// WMO 天氣代碼 → 圖示 + 繁體中文描述
 const WMO_CODES = {
   0:{icon:'\u2600\uFE0F',desc:'天晴'}, 1:{icon:'\u{1F325}\uFE0F',desc:'大致天晴'},
   2:{icon:'\u26C5\uFE0F',desc:'局部多雲'}, 3:{icon:'\u2601\uFE0F',desc:'陰天'},
@@ -616,9 +682,6 @@ function cToF(c){ return c*9/5+32; }
 function formatTemp(c){ return Math.round(settings.tempUnit === 'F' ? cToF(c) : c); }
 function tempUnit(){ return settings.tempUnit === 'F' ? '\u00B0F' : '\u00B0C'; }
 
-// 只有在自己電腦本機執行時，才把設定同步到伺服器檔案。
-// 部署到公開網站後，設定只存在每位訪客自己的瀏覽器（localStorage），
-// 避免你的稱呼／偏好被其他訪客看到或被覆寫。
 const IS_LOCAL_HOST = ['localhost', '127.0.0.1', '::1'].includes(location.hostname)
   || location.protocol === 'file:';
 
@@ -721,7 +784,6 @@ function setStatus(m){
     text.textContent = '已連線';
     banner.classList.remove('show');
   } else if (m === 'static'){
-    // GitHub Pages 等純靜態環境：天氣／匯率／假期即時，行情為定時快照
     pill.classList.remove('offline');
     text.textContent = '已連線';
     banner.classList.remove('show');
@@ -766,7 +828,6 @@ async function loadWeather(){
     return r.json();
   });
 
-  // 只有在模式仍未確定時才降級為直連；不要覆寫已判斷好的 static / local
   if (mode === 'unknown' || mode === 'offline') setStatus('direct');
   renderWeather(data);
   return data;
@@ -784,7 +845,6 @@ function renderWeather(data){
   document.getElementById('weather-humidity').textContent = cur.relative_humidity_2m + '%';
   document.getElementById('weather-wind').textContent = Math.round(cur.wind_speed_10m) + ' 公里/小時';
 
-  // 今日高低溫／降雨機率
   const d0 = data.daily;
   document.getElementById('weather-today').innerHTML =
     `<span>今日 <b>${formatTemp(d0.temperature_2m_max[0])}\u00B0</b>` +
@@ -876,7 +936,6 @@ async function loadExchange(){
   list.innerHTML = '';
 
   rows.forEach(c => {
-    // 大數字 = 兌 1 單位外幣需要幾多港幣（日圓以 100 為單位較易讀）
     const qty = c.code === 'JPY' ? 100 : 1;
     const hkdPerUnit = (1 / c.perHKD) * qty;
     const bigNum = qty === 100 ? hkdPerUnit.toFixed(2) : hkdPerUnit.toFixed(4);
@@ -953,7 +1012,6 @@ async function loadMarkets(){
   const list = document.getElementById('markets-list');
   try {
     const data = await apiGet('/api/markets', async () => {
-      // 靜態版本（GitHub Pages）：讀取由 GitHub Actions 定時產生的快照
       const r = await fetch('./data/markets.json', { cache:'no-store' });
       if (!r.ok) throw new Error('no snapshot');
       const j = await r.json();
@@ -1154,7 +1212,6 @@ async function init(){
   await refreshAll(false);
   setupAutoRefresh();
 
-  // 每分鐘重畫太陽位置
   setInterval(() => {
     if (sunData) renderSun(sunData[0], sunData[1]);
   }, 60000);
