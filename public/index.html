@@ -115,6 +115,7 @@ body.edit-mode .card-header:active { cursor: grabbing; }
   background: rgba(255,255,255,0.1); color: var(--text-tertiary);
   cursor: grab; transition: var(--transition);
   flex-shrink: 0;
+  touch-action: none;
 }
 .drag-handle:hover { background: var(--accent-blue); color: white; }
 .drag-handle:active { cursor: grabbing; }
@@ -126,6 +127,7 @@ body.edit-mode .card-header:active { cursor: grabbing; }
   background: linear-gradient(135deg, transparent 50%, rgba(255,255,255,0.15) 50%);
   cursor: se-resize; border-radius: 0 0 var(--radius-md) 0;
   z-index: 10;
+  touch-action: none;
 }
 .resize-handle::after {
   content: ''; position: absolute; bottom: 3px; right: 3px;
@@ -398,7 +400,7 @@ body.edit-mode .edit-toolbar { display: flex; }
 }
 .sun-times { display: flex; justify-content: space-between; width: 100%; max-width: 320px; margin-top: 10px; }
 .sun-time { text-align: center; flex: 1; }
-.sun-time-icon { font-size: 20px; margin-bottom: 4px; }
+.sun-time-icon { font.size: 20px; margin-bottom: 4px; }
 .sun-time-value { font-size: 17px; font-weight: 600; font-variant-numeric: tabular-nums; }
 .sun-time-label { font-size: 10.5px; color: var(--text-tertiary); margin-top: 2px; }
 .sun-duration { text-align: center; margin-top: 10px; width: 100%; }
@@ -435,7 +437,7 @@ body.edit-mode .edit-toolbar { display: flex; }
 }
 .settings-modal h2 { font-size: 20px; margin-bottom: 20px; }
 .settings-section { margin-bottom: 20px; }
-.settings-section h3 { font-size: 13px; color: var(--text-secondary); letter-spacing: 1px; margin-bottom: 10px; }
+.settings-section h3 { font.size: 13px; color: var(--text-secondary); letter-spacing: 1px; margin-bottom: 10px; }
 .settings-option { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.06); }
 .settings-option label { font-size: 14px; }
 .settings-option select, .settings-option input {
@@ -885,9 +887,6 @@ function toggleSettings(){
 /* =========================================================
    2. 編輯模式：拖曳、拉伸、佈局持久化
    ========================================================= */
-const GRID_COLS = 6;
-const ROW_HEIGHT = 80;
-const GAP = 16;
 let editMode = false;
 let draggedCard = null;
 let dropTarget = null;
@@ -898,23 +897,35 @@ function toggleEditMode(){
   editMode = !editMode;
   document.body.classList.toggle('edit-mode', editMode);
   document.getElementById('editGridOverlay').classList.toggle('active', editMode);
-  document.getElementById('editModeBtn').classList.toggle('active', editMode);
-  document.getElementById('editModeBtn').textContent = editMode ? '&#10003;' : '&#9998;';
-  document.getElementById('editModeBtn').title = editMode ? '完成編輯' : '編輯版面';
+  const btn = document.getElementById('editModeBtn');
+  btn.classList.toggle('active', editMode);
+  btn.textContent = editMode ? '&#10003;' : '&#9998;';
+  btn.title = editMode ? '完成編輯' : '編輯版面';
   
   if (editMode) {
-    // 進入編輯模式：套用儲存的佈局或預設佈局
     applySavedLayout();
-    // 移除預設佈局類別，改用 inline grid-column/row
     document.querySelectorAll('.card').forEach(card => {
       card.classList.remove('card--hero', 'card--secondary', 'card--full');
     });
   } else {
-    // 離開編輯模式：恢復預設類別（如果沒有儲存的佈局）
     if (!localStorage.getItem('dashboard-layout')) {
       restoreDefaultLayout();
     }
   }
+}
+
+/* --- 解析 grid-column/row 同時支援 "1 / 4" 和 "1 / span 3" --- */
+function parseGridLine(value){
+  // "1 / 4" 或 "1 / span 3"
+  const parts = value.split('/').map(s => s.trim());
+  const start = parseInt(parts[0]) || 1;
+  let span = 1;
+  if (parts[1]) {
+    const m = parts[1].match(/span\s+(\d+)/i);
+    if (m) span = parseInt(m[1]);
+    else span = parseInt(parts[1]) - start + 1;
+  }
+  return { start, span };
 }
 
 function applySavedLayout(){
@@ -932,7 +943,6 @@ function applySavedLayout(){
       return;
     }
   } catch(e) {}
-  // 沒有儲存佈局，用預設
   restoreDefaultLayout();
 }
 
@@ -952,30 +962,17 @@ function saveLayout(){
   document.querySelectorAll('.card').forEach(card => {
     const id = card.dataset.cardId;
     const style = window.getComputedStyle(card);
-    const gridCol = style.gridColumn; // "1 / span 3"
-    const gridRow = style.gridRow;
-    const colMatch = gridCol.match(/(\d+)\s*\/\s*span\s*(\d+)/);
-    const rowMatch = gridRow.match(/(\d+)\s*\/\s*span\s*(\d+)/);
-    if (colMatch && rowMatch) {
-      layout[id] = {
-        col: parseInt(colMatch[1]),
-        colSpan: parseInt(colMatch[2]),
-        row: parseInt(rowMatch[1]),
-        rowSpan: parseInt(rowMatch[2])
-      };
-    }
+    const col = parseGridLine(style.gridColumn);
+    const row = parseGridLine(style.gridRow);
+    layout[id] = { col: col.start, colSpan: col.span, row: row.start, rowSpan: row.span };
   });
   localStorage.setItem('dashboard-layout', JSON.stringify(layout));
   toggleEditMode();
 }
 
 function cancelEdit(){
-  // 還原到儲存的佈局或預設
-  if (localStorage.getItem('dashboard-layout')) {
-    applySavedLayout();
-  } else {
-    restoreDefaultLayout();
-  }
+  if (localStorage.getItem('dashboard-layout')) applySavedLayout();
+  else restoreDefaultLayout();
   toggleEditMode();
 }
 
@@ -984,45 +981,49 @@ function resetLayout(){
   restoreDefaultLayout();
 }
 
-/* ----- 拖曳移動 ----- */
+/* ----- 拖曳移動（事件委派） ----- */
 function initDragDrop(){
   const dashboard = document.getElementById('dashboard');
   const dropIndicator = document.getElementById('dropIndicator');
   
-  document.querySelectorAll('.drag-handle').forEach(handle => {
-    handle.addEventListener('pointerdown', onDragStart);
-  });
-  
-  function onDragStart(e){
+  // 用事件委派：在 dashboard 上監聽 pointerdown
+  dashboard.addEventListener('pointerdown', (e) => {
     if (!editMode) return;
+    const handle = e.target.closest('.drag-handle');
+    if (!handle) return;
+    
     e.preventDefault();
     e.stopPropagation();
-    draggedCard = e.target.closest('.card');
+    draggedCard = handle.closest('.card');
+    if (!draggedCard) return;
+    
     draggedCard.classList.add('dragging');
     draggedCard.setPointerCapture(e.pointerId);
     
-    const rect = draggedCard.getBoundingClientRect();
     const dashRect = dashboard.getBoundingClientRect();
-    
-    document.addEventListener('pointermove', onDragMove);
-    document.addEventListener('pointerup', onDragEnd);
+    const style = window.getComputedStyle(draggedCard);
+    const col = parseGridLine(style.gridColumn);
+    const row = parseGridLine(style.gridRow);
+    const colSpan = col.span;
+    const rowSpan = row.span;
     
     function onDragMove(e){
       const x = e.clientX - dashRect.left;
       const y = e.clientY - dashRect.top;
       
-      // 計算最近的格位
-      const col = Math.max(1, Math.min(GRID_COLS, Math.round(x / (dashRect.width / GRID_COLS)) + 1));
-      const row = Math.max(1, Math.round(y / (ROW_HEIGHT + GAP)) + 1);
+      // dashboard 內容區寬度（扣除左右 padding 32px*2）
+      const contentWidth = dashRect.width - 64;
+      const colWidth = contentWidth / GRID_COLS;
+      
+      // 計算最近的格位（從第 1 格開始）
+      const colIdx = Math.max(1, Math.min(GRID_COLS - colSpan + 1, 
+        Math.round(x / colWidth) + 1));
+      const rowIdx = Math.max(1, Math.round(y / (ROW_HEIGHT + GAP)) + 1);
       
       // 顯示放置指示器
-      const cardRect = draggedCard.getBoundingClientRect();
-      const colSpan = parseInt(draggedCard.style.gridColumn.split('span')[1]) || 1;
-      const rowSpan = parseInt(draggedCard.style.gridRow.split('span')[1]) || 1;
-      
-      const indicatorLeft = (col - 1) * (dashRect.width / GRID_COLS);
-      const indicatorTop = (row - 1) * (ROW_HEIGHT + GAP);
-      const indicatorWidth = colSpan * (dashRect.width / GRID_COLS) - GAP;
+      const indicatorLeft = 32 + (colIdx - 1) * colWidth;
+      const indicatorTop = 10 + (rowIdx - 1) * (ROW_HEIGHT + GAP); // dashboard padding-top 10px
+      const indicatorWidth = colSpan * colWidth - GAP;
       const indicatorHeight = rowSpan * (ROW_HEIGHT + GAP) - GAP;
       
       dropIndicator.style.left = indicatorLeft + 'px';
@@ -1031,7 +1032,7 @@ function initDragDrop(){
       dropIndicator.style.height = indicatorHeight + 'px';
       dropIndicator.classList.add('active');
       
-      dropTarget = { col, row };
+      dropTarget = { col: colIdx, row: rowIdx };
     }
     
     function onDragEnd(e){
@@ -1042,53 +1043,55 @@ function initDragDrop(){
       dropIndicator.classList.remove('active');
       
       if (dropTarget) {
-        const colSpan = parseInt(draggedCard.style.gridColumn.split('span')[1]) || 1;
-        const rowSpan = parseInt(draggedCard.style.gridRow.split('span')[1]) || 1;
-        // 確保不超出邊界
-        const finalCol = Math.min(dropTarget.col, GRID_COLS - colSpan + 1);
+        const style = window.getComputedStyle(draggedCard);
+        const col = parseGridLine(style.gridColumn);
+        const row = parseGridLine(style.gridRow);
+        const finalCol = Math.min(dropTarget.col, GRID_COLS - col.span + 1);
         const finalRow = Math.max(1, dropTarget.row);
-        draggedCard.style.gridColumn = `${finalCol} / span ${colSpan}`;
-        draggedCard.style.gridRow = `${finalRow} / span ${rowSpan}`;
+        draggedCard.style.gridColumn = `${finalCol} / span ${col.span}`;
+        draggedCard.style.gridRow = `${finalRow} / span ${row.span}`;
       }
       draggedCard = null;
       dropTarget = null;
     }
-  }
+    
+    document.addEventListener('pointermove', onDragMove);
+    document.addEventListener('pointerup', onDragEnd);
+  });
 }
 
-/* ----- 拉伸改大小 ----- */
+/* ----- 拉伸改大小（事件委派） ----- */
 function initResize(){
-  document.querySelectorAll('.resize-handle').forEach(handle => {
-    handle.addEventListener('pointerdown', onResizeStart);
-  });
+  const dashboard = document.getElementById('dashboard');
   
-  function onResizeStart(e){
+  dashboard.addEventListener('pointerdown', (e) => {
     if (!editMode) return;
+    const handle = e.target.closest('.resize-handle');
+    if (!handle) return;
+    
     e.preventDefault();
     e.stopPropagation();
-    resizeCard = e.target.closest('.card');
+    resizeCard = handle.closest('.card');
+    if (!resizeCard) return;
+    
     resizeCard.classList.add('resizing');
     resizeCard.setPointerCapture(e.pointerId);
     
     const style = window.getComputedStyle(resizeCard);
-    const colMatch = style.gridColumn.match(/(\d+)\s*\/\s*span\s*(\d+)/);
-    const rowMatch = style.gridRow.match(/(\d+)\s*\/\s*span\s*(\d+)/);
+    const col = parseGridLine(style.gridColumn);
+    const row = parseGridLine(style.gridRow);
     resizeStart = {
       x: e.clientX, y: e.clientY,
-      col: colMatch ? parseInt(colMatch[1]) : 1,
-      row: rowMatch ? parseInt(rowMatch[1]) : 1,
-      colSpan: colMatch ? parseInt(colMatch[2]) : 1,
-      rowSpan: rowMatch ? parseInt(rowMatch[2]) : 1
+      col: col.start, row: row.start,
+      colSpan: col.span, rowSpan: row.span
     };
-    
-    document.addEventListener('pointermove', onResizeMove);
-    document.addEventListener('pointerup', onResizeEnd);
     
     function onResizeMove(e){
       const dx = e.clientX - resizeStart.x;
       const dy = e.clientY - resizeStart.y;
-      const dashRect = document.getElementById('dashboard').getBoundingClientRect();
-      const colWidth = dashRect.width / GRID_COLS;
+      const dashRect = dashboard.getBoundingClientRect();
+      const contentWidth = dashRect.width - 64;
+      const colWidth = contentWidth / GRID_COLS;
       
       let newColSpan = Math.max(1, Math.min(GRID_COLS - resizeStart.col + 1, 
         Math.round(resizeStart.colSpan + dx / colWidth)));
@@ -1105,7 +1108,10 @@ function initResize(){
       resizeCard.classList.remove('resizing');
       resizeCard = null;
     }
-  }
+    
+    document.addEventListener('pointermove', onResizeMove);
+    document.addEventListener('pointerup', onResizeEnd);
+  });
 }
 
 /* =========================================================
