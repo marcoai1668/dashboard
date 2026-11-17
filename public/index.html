@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>主頁儀表板</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#9728;</text></svg>">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridstack@10.3.1/dist/gridstack.min.css">
 <style>
 :root {
   --bg-gradient-start: #1a1a2e;
@@ -20,15 +21,9 @@
   --accent-red: #FF453A;
   --accent-orange: #FF9F0A;
   --accent-purple: #BF5AF2;
-  --radius-lg: 24px;
   --radius-md: 18px;
-  --radius-sm: 14px;
   --blur: 40px;
   --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  --gap: 16px;
-  --header-h: 72px;
-  --grid-cols: 6;
-  --row-height: 80px;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -42,10 +37,6 @@ body {
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
   padding-bottom: 12vh;
 }
 
@@ -64,116 +55,12 @@ body::after {
   pointer-events: none; z-index: 0;
 }
 
-/* ===== 編輯模式覆蓋層 ===== */
-.edit-grid-overlay {
-  position: fixed; inset: 0; pointer-events: none; z-index: 50; display: none;
-}
-.edit-grid-overlay.active { display: block; }
-.edit-grid-overlay::before {
-  content: '';
-  position: absolute; top: var(--header-h); left: 32px; right: 32px; bottom: 0;
-  background-image: 
-    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
-  background-size: calc((100% - 64px) / 6) var(--row-height);
-  background-position: 0 0;
-  pointer-events: none;
-}
-body.edit-mode .edit-grid-overlay { display: block; }
-
-/* ===== 編輯模式卡片樣式 ===== */
-body.edit-mode .card {
-  transition: box-shadow 0.2s, border-color 0.2s, transform 0.1s;
-}
-body.edit-mode .card:hover {
-  transform: none;
-  box-shadow: 0 0 0 2px var(--accent-blue), 0 8px 32px rgba(0,0,0,0.3);
-  border-color: var(--accent-blue);
-}
-body.edit-mode .card.dragging {
-  opacity: 0.6; transform: scale(1.02); z-index: 100;
-  box-shadow: 0 0 0 2px var(--accent-orange), 0 12px 40px rgba(0,0,0,0.4);
-  border-color: var(--accent-orange);
-}
-body.edit-mode .card.resizing {
-  transition: none; z-index: 100;
-}
-body.edit-mode .card .resize-handle {
-  display: block;
-}
-body.edit-mode .card .drag-handle {
-  display: flex;
-}
-body.edit-mode .card .card-refresh { opacity: 0.3; pointer-events: none; }
-body.edit-mode .card-header { cursor: grab; }
-body.edit-mode .card-header:active { cursor: grabbing; }
-
-/* 拖曳手柄 */
-.drag-handle {
-  display: none; align-items: center; justify-content: center;
-  width: 28px; height: 28px; border-radius: 6px;
-  background: rgba(255,255,255,0.1); color: var(--text-tertiary);
-  cursor: grab; transition: var(--transition);
-  flex-shrink: 0;
-  touch-action: none;
-}
-.drag-handle:hover { background: var(--accent-blue); color: white; }
-.drag-handle:active { cursor: grabbing; }
-
-/* 拉伸手柄 */
-.resize-handle {
-  display: none; position: absolute; bottom: 0; right: 0;
-  width: 20px; height: 20px;
-  background: linear-gradient(135deg, transparent 50%, rgba(255,255,255,0.15) 50%);
-  cursor: se-resize; border-radius: 0 0 var(--radius-md) 0;
-  z-index: 10;
-  touch-action: none;
-}
-.resize-handle::after {
-  content: ''; position: absolute; bottom: 3px; right: 3px;
-  width: 12px; height: 12px;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M0 10h4M0 6h8M0 2h12' stroke='white' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
-  background-size: contain; opacity: 0.6;
-}
-.resize-handle:hover { background: linear-gradient(135deg, transparent 50%, var(--accent-blue) 50%); }
-
-/* 放置指示器 */
-.drop-indicator {
-  position: absolute; border: 2px dashed var(--accent-blue);
-  background: rgba(10,132,255,0.15); border-radius: var(--radius-sm);
-  pointer-events: none; z-index: 80; display: none;
-  transition: all 0.15s ease-out;
-}
-.drop-indicator.active { display: block; }
-
-/* 編輯工具列 */
-.edit-toolbar {
-  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
-  display: none; gap: 12px; align-items: center;
-  background: rgba(30,30,50,0.95); backdrop-filter: blur(20px);
-  border: 1px solid var(--card-border); border-radius: 50px;
-  padding: 10px 20px; z-index: 200; box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-}
-body.edit-mode .edit-toolbar { display: flex; }
-.edit-toolbar-btn {
-  background: transparent; border: none; color: var(--text-secondary);
-  font-size: 13px; font-weight: 500; padding: 6px 14px; border-radius: 20px;
-  cursor: pointer; transition: var(--transition); font-family: inherit;
-  display: flex; align-items: center; gap: 6px;
-}
-.edit-toolbar-btn:hover { background: rgba(255,255,255,0.1); color: var(--text-primary); }
-.edit-toolbar-btn.primary { background: var(--accent-blue); color: white; }
-.edit-toolbar-btn.primary:hover { opacity: 0.9; }
-.edit-toolbar-btn.danger { color: var(--accent-red); }
-.edit-toolbar-btn.danger:hover { background: rgba(255,69,58,0.15); color: var(--accent-red); }
-.edit-toolbar-divider { width: 1px; height: 20px; background: var(--card-border); }
-
 /* ===== 頂部 ===== */
 .header {
   position: relative; z-index: 1;
   display: flex; justify-content: space-between; align-items: center;
   padding: 16px 32px 10px;
-  width: 100%; max-width: 1400px;
+  width: 100%; max-width: 1400px; margin: 0 auto;
 }
 .header-left h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
 .header-left p { font-size: 15px; color: var(--text-secondary); margin-top: 2px; }
@@ -211,9 +98,10 @@ body.edit-mode .edit-toolbar { display: flex; }
   display: flex; align-items: center; justify-content: center;
   cursor: pointer; transition: var(--transition);
   backdrop-filter: blur(var(--blur)); color: var(--text-primary); font-size: 18px;
+  line-height: 1;
 }
 .settings-btn:hover, .edit-mode-btn:hover { background: var(--card-hover); transform: scale(1.05); }
-.edit-mode-btn.active { background: var(--accent-blue); border-color: var(--accent-blue); }
+.edit-mode-btn.active { background: var(--accent-blue); border-color: var(--accent-blue); color: #fff; }
 
 /* ===== 提示橫幅 ===== */
 .alert-banner {
@@ -244,16 +132,20 @@ body.edit-mode .edit-toolbar { display: flex; }
 }
 .banner-btn:hover { background: rgba(255,255,255,0.2); }
 
-/* ===== 主版面：Grid 定義區域 ===== */
-.dashboard {
+/* ===== GridStack 版面 ===== */
+.grid-stack {
   position: relative; z-index: 1;
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  grid-template-rows: repeat(6, var(--row-height));
-  gap: var(--gap);
-  padding: 10px 32px 28px;
   width: 100%; max-width: 1400px;
-  min-height: calc(6 * var(--row-height) + 5 * var(--gap));
+  margin: 0 auto;
+  padding: 6px 24px 28px;
+}
+.grid-stack-item-content {
+  padding: 0 !important;
+  overflow: visible !important;
+  background: transparent !important;
+}
+.grid-stack-item .card {
+  height: 100%; min-height: 0; margin: 0;
 }
 
 /* 卡片基礎 */
@@ -261,12 +153,11 @@ body.edit-mode .edit-toolbar { display: flex; }
   background: var(--card-bg);
   backdrop-filter: blur(var(--blur)); -webkit-backdrop-filter: blur(var(--blur));
   border: 1px solid var(--card-border);
-  border-radius: var(--radius-md); padding: 20px 22px;
-  transition: var(--transition);
-  position: relative; overflow: hidden;
+  border-radius: var(--radius-md); padding: 18px 20px;
+  transition: background 0.3s, border-color 0.3s, transform 0.3s, box-shadow 0.3s;
+  position: relative;
   display: flex; flex-direction: column;
-  min-height: 100%;
-  contain: layout style;
+  overflow: hidden;
 }
 .card:hover {
   background: var(--card-hover);
@@ -274,31 +165,27 @@ body.edit-mode .edit-toolbar { display: flex; }
   transform: translateY(-2px);
 }
 
-/* 預設佈局類別（非編輯模式用） */
-.card--hero { grid-column: 1 / 4; grid-row: 1 / 3; min-height: calc(2 * var(--row-height) + var(--gap)); padding: 24px 28px; }
-.card--secondary { grid-column: span 3; grid-row: span 2; min-height: calc(2 * var(--row-height) + var(--gap)); }
-.card--full { grid-column: 1 / -1; grid-row: span 2; min-height: calc(2 * var(--row-height) + var(--gap)); }
-
-.card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+.card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 8px; }
 .card-title {
   display: flex; align-items: center; gap: 8px;
   font-size: 12px; font-weight: 600; color: var(--text-secondary);
   letter-spacing: 1px; text-transform: uppercase;
+  flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.card--hero .card-title { font-size: 13px; }
-.card-icon { font-size: 16px; }
+.card-icon { font-size: 15px; }
 .card-refresh {
   background: transparent; border: none; color: var(--text-tertiary);
   cursor: pointer; font-size: 14px; transition: var(--transition);
   padding: 4px 8px; border-radius: 8px;
   display: flex; align-items: center; gap: 4px;
+  flex-shrink: 0;
 }
 .card-refresh:hover { color: var(--text-primary); background: rgba(255,255,255,0.06); }
 .card-refresh.spinning .refresh-icon { animation: spin 0.8s linear infinite; }
 @keyframes spin { from{transform:rotate(0)} to{transform:rotate(360deg)} }
 
-.card-content { flex: 1; display: flex; flex-direction: column; }
-.card-updated { font-size: 10px; color: var(--text-tertiary); margin-top: 8px; text-align: right; }
+.card-content { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+.card-updated { font-size: 10px; color: var(--text-tertiary); margin-top: 6px; text-align: right; flex-shrink: 0; }
 
 /* 空白／錯誤狀態 */
 .card-state {
@@ -310,43 +197,44 @@ body.edit-mode .edit-toolbar { display: flex; }
 .card-state-text { font-size: 12.5px; color: var(--text-tertiary); line-height: 1.7; }
 .card-state-text b { color: var(--text-secondary); font-weight: 600; }
 
-/* ===== 主卡片：即時天氣 ===== */
+/* ===== 即時天氣 ===== */
 .weather-hero { display: flex; flex-direction: column; height: 100%; }
 .weather-hero-top {
-  display: flex; align-items: flex-start; gap: 24px;
-  flex: 1; min-height: 140px;
+  display: flex; align-items: flex-start; gap: 20px;
+  flex: 1; min-height: 0;
 }
-.weather-hero-icon { font-size: 84px; line-height: 1; flex-shrink: 0; }
-.weather-hero-main { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+.weather-hero-icon { font-size: 72px; line-height: 1; flex-shrink: 0; }
+.weather-hero-main { flex: 1; display: flex; flex-direction: column; justify-content: center; min-width: 0; }
 .weather-hero-temp {
   display: flex; align-items: baseline; gap: 4px;
-  font-size: 64px; font-weight: 200; letter-spacing: -2px; line-height: 1;
+  font-size: 56px; font-weight: 200; letter-spacing: -2px; line-height: 1;
 }
-.weather-hero-temp .temp-unit { font-size: 28px; font-weight: 200; color: var(--text-secondary); }
-.weather-hero-desc { font-size: 16px; color: var(--text-secondary); margin-top: 6px; font-weight: 400; }
+.weather-hero-temp .temp-unit { font-size: 26px; font-weight: 200; color: var(--text-secondary); }
+.weather-hero-desc { font-size: 15px; color: var(--text-secondary); margin-top: 6px; font-weight: 400; }
 .weather-hero-details {
-  display: flex; gap: 28px; margin-top: 16px; flex-wrap: wrap;
+  display: flex; gap: 24px; margin-top: 14px; flex-wrap: wrap;
 }
 .weather-hero-detail { display: flex; flex-direction: column; gap: 2px; }
 .weather-hero-detail-label { color: var(--text-tertiary); font-size: 11px; }
 .weather-hero-detail-value { color: var(--text-primary); font-weight: 500; font-size: 15px; }
 .weather-today-bar {
-  display: flex; gap: 20px; align-items: center;
-  margin-top: auto; padding-top: 16px;
+  display: flex; gap: 18px; align-items: center;
+  margin-top: auto; padding-top: 14px;
   border-top: 1px solid rgba(255,255,255,0.07);
   font-size: 13px; color: var(--text-secondary);
+  flex-wrap: wrap; flex-shrink: 0;
 }
 .weather-today-bar b { color: var(--text-primary); font-weight: 600; }
 .weather-today-bar .wt-sep { color: var(--text-tertiary); }
 
 /* ===== 預報 ===== */
-.forecast-list { display: flex; gap: 4px; overflow-x: auto; padding-bottom: 4px; margin: auto 0; flex: 1; }
+.forecast-list { display: flex; gap: 4px; overflow-x: auto; padding-bottom: 4px; margin: auto 0; flex: 1; min-height: 0; }
 .forecast-list::-webkit-scrollbar { height: 4px; }
 .forecast-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
-.forecast-day { flex: 1; min-width: 0; text-align: center; padding: 10px 4px; border-radius: 10px; transition: var(--transition); }
+.forecast-day { flex: 1; min-width: 0; text-align: center; padding: 8px 4px; border-radius: 10px; transition: var(--transition); }
 .forecast-day:hover { background: rgba(255,255,255,0.06); }
 .forecast-day .day-name { font-size: 10px; color: var(--text-tertiary); margin-bottom: 6px; white-space: nowrap; }
-.forecast-day .day-icon { font-size: 24px; margin-bottom: 6px; }
+.forecast-day .day-icon { font-size: 22px; margin-bottom: 6px; }
 .forecast-day .day-temps { font-size: 12px; font-weight: 500; }
 .forecast-day .day-high { color: var(--text-primary); }
 .forecast-day .day-low { color: var(--text-tertiary); }
@@ -354,71 +242,71 @@ body.edit-mode .edit-toolbar { display: flex; }
 .forecast-day.today { background: rgba(10,132,255,0.15); }
 
 /* ===== 匯率 ===== */
-.exchange-list { display: flex; flex-direction: column; gap: 12px; flex: 1; justify-content: center; }
+.exchange-list { display: flex; flex-direction: column; gap: 8px; flex: 1; justify-content: center; min-height: 0; }
 .exchange-item {
   display: flex; justify-content: space-between; align-items: center;
-  padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.06);
+  padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.06);
 }
 .exchange-item:last-child { border-bottom: none; }
-.exchange-currency { display: flex; align-items: center; gap: 12px; }
-.exchange-flag { font-size: 26px; }
+.exchange-currency { display: flex; align-items: center; gap: 10px; }
+.exchange-flag { font-size: 22px; }
 .exchange-info { display: flex; flex-direction: column; }
-.exchange-code { font-size: 16px; font-weight: 600; }
-.exchange-name { font-size: 11px; color: var(--text-tertiary); }
+.exchange-code { font-size: 15px; font-weight: 600; }
+.exchange-name { font-size: 10.5px; color: var(--text-tertiary); }
 .exchange-value { text-align: right; }
-.exchange-rate { font-size: 20px; font-weight: 500; font-variant-numeric: tabular-nums; }
-.exchange-unit { font-size: 11px; color: var(--text-tertiary); }
+.exchange-rate { font-size: 18px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.exchange-unit { font-size: 10.5px; color: var(--text-tertiary); }
 
 /* ===== 假期 ===== */
-.holiday-card-content { display: flex; gap: 32px; align-items: center; justify-content: center; flex-wrap: wrap; }
-.holiday-main { text-align: center; padding: 4px 0; flex: 1; min-width: 200px; }
+.holiday-card-content { display: flex; gap: 28px; align-items: center; justify-content: center; flex-wrap: wrap; }
+.holiday-main { text-align: center; padding: 4px 0; flex: 1; min-width: 180px; }
 .holiday-countdown {
-  font-size: 56px; font-weight: 200; letter-spacing: -3px; line-height: 1;
+  font-size: 48px; font-weight: 200; letter-spacing: -3px; line-height: 1;
   background: linear-gradient(135deg, var(--accent-orange), var(--accent-purple));
   -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
 }
-.holiday-days-label { font-size: 14px; color: var(--text-secondary); margin-top: 4px; }
-.holiday-name { font-size: 18px; font-weight: 600; margin-top: 10px; }
-.holiday-date { font-size: 13px; color: var(--text-tertiary); margin-top: 4px; }
+.holiday-days-label { font-size: 13px; color: var(--text-secondary); margin-top: 4px; }
+.holiday-name { font-size: 17px; font-weight: 600; margin-top: 8px; }
+.holiday-date { font-size: 12px; color: var(--text-tertiary); margin-top: 4px; }
 .holiday-type-badge { display: inline-block; font-size: 10px; padding: 3px 10px; border-radius: 8px; margin-top: 8px; }
-.holiday-upcoming { flex: 1; min-width: 220px; border-left: 1px solid rgba(255,255,255,0.08); padding-left: 24px; }
-.holiday-upcoming-title { font-size: 11px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
-.holiday-upcoming-item { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-tertiary); padding: 6px 0; }
+.holiday-upcoming { flex: 1; min-width: 200px; border-left: 1px solid rgba(255,255,255,0.08); padding-left: 20px; }
+.holiday-upcoming-title { font-size: 11px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+.holiday-upcoming-item { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-tertiary); padding: 4px 0; }
 .holiday-upcoming-item span:first-child { color: var(--text-secondary); font-weight: 500; }
 
 /* ===== 日出日落 ===== */
 .sun-card { justify-content: center; align-items: center; }
 .sun-card .card-content { justify-content: center; align-items: center; width: 100%; }
-.sun-arc-container { position: relative; width: 100%; max-width: 280px; height: 100px; display: flex; justify-content: center; align-items: flex-end; margin: 8px 0 0; }
+.sun-arc-container { position: relative; width: 100%; max-width: 240px; height: 80px; display: flex; justify-content: center; align-items: flex-end; margin: 4px 0 0; }
 .sun-arc { width: 100%; height: 100%; position: relative; }
 .sun-arc svg { width: 100%; height: 100%; }
 .sun-dot {
-  position: absolute; width: 16px; height: 16px;
+  position: absolute; width: 14px; height: 14px;
   background: var(--accent-orange); border-radius: 50%;
-  box-shadow: 0 0 24px rgba(255,159,10,0.7);
+  box-shadow: 0 0 20px rgba(255,159,10,0.7);
   transform: translate(-50%, -50%); transition: all 0.5s ease;
 }
-.sun-times { display: flex; justify-content: space-between; width: 100%; max-width: 320px; margin-top: 10px; }
+.sun-times { display: flex; justify-content: space-between; width: 100%; max-width: 280px; margin-top: 8px; }
 .sun-time { text-align: center; flex: 1; }
-.sun-time-icon { font.size: 20px; margin-bottom: 4px; }
-.sun-time-value { font-size: 17px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.sun-time-icon { font-size: 18px; margin-bottom: 2px; }
+.sun-time-value { font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums; }
 .sun-time-label { font-size: 10.5px; color: var(--text-tertiary); margin-top: 2px; }
-.sun-duration { text-align: center; margin-top: 10px; width: 100%; }
-.sun-duration-value { font-size: 14px; color: var(--text-secondary); }
+.sun-duration { text-align: center; margin-top: 8px; width: 100%; }
+.sun-duration-value { font-size: 13px; color: var(--text-secondary); }
 
 /* ===== 市場 ===== */
-.markets-list { display: flex; flex-direction: column; gap: 6px; flex: 1; justify-content: center; }
+.markets-list { display: flex; flex-direction: column; gap: 4px; flex: 1; justify-content: center; min-height: 0; }
 .market-item {
   display: flex; justify-content: space-between; align-items: center;
-  padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.06);
+  padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.06);
 }
 .market-item:last-child { border-bottom: none; }
-.market-info { display: flex; flex-direction: column; gap: 2px; }
-.market-name { font-size: 14px; font-weight: 600; }
-.market-symbol { font-size: 10px; color: var(--text-tertiary); }
-.market-data { text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
-.market-price { font-size: 18px; font-weight: 500; font-variant-numeric: tabular-nums; }
-.market-change { font-size: 13px; font-weight: 500; font-variant-numeric: tabular-nums; display: flex; align-items: center; gap: 3px; }
+.market-info { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.market-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.market-symbol { font-size: 9.5px; color: var(--text-tertiary); }
+.market-data { text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; flex-shrink: 0; }
+.market-price { font-size: 16px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.market-change { font-size: 12px; font-weight: 500; font-variant-numeric: tabular-nums; display: flex; align-items: center; gap: 3px; }
 .market-change.up { color: var(--accent-green); }
 .market-change.down { color: var(--accent-red); }
 .market-change.flat { color: var(--text-tertiary); }
@@ -427,7 +315,7 @@ body.edit-mode .edit-toolbar { display: flex; }
 .settings-overlay {
   position: fixed; inset: 0;
   background: rgba(0,0,0,0.5); backdrop-filter: blur(10px);
-  z-index: 100; display: none; align-items: center; justify-content: center;
+  z-index: 300; display: none; align-items: center; justify-content: center;
 }
 .settings-overlay.active { display: flex; }
 .settings-modal {
@@ -437,7 +325,7 @@ body.edit-mode .edit-toolbar { display: flex; }
 }
 .settings-modal h2 { font-size: 20px; margin-bottom: 20px; }
 .settings-section { margin-bottom: 20px; }
-.settings-section h3 { font.size: 13px; color: var(--text-secondary); letter-spacing: 1px; margin-bottom: 10px; }
+.settings-section h3 { font-size: 13px; color: var(--text-secondary); letter-spacing: 1px; margin-bottom: 10px; }
 .settings-option { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.06); }
 .settings-option label { font-size: 14px; }
 .settings-option select, .settings-option input {
@@ -459,6 +347,62 @@ body.edit-mode .edit-toolbar { display: flex; }
 .settings-attribution { text-align: center; font-size: 11px; color: var(--text-tertiary); margin-top: 16px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.06); }
 .settings-attribution a { color: var(--accent-blue); text-decoration: none; }
 
+/* ===== 編輯模式 ===== */
+.drag-handle {
+  display: none; align-items: center; justify-content: center;
+  width: 26px; height: 26px; border-radius: 6px;
+  background: rgba(255,255,255,0.1); color: var(--text-tertiary);
+  cursor: grab; transition: var(--transition);
+  flex-shrink: 0; font-size: 12px; line-height: 1;
+  touch-action: none;
+  user-select: none;
+}
+.drag-handle:hover { background: var(--accent-blue); color: #fff; }
+.drag-handle:active { cursor: grabbing; }
+
+body.edit-mode .drag-handle { display: flex; }
+body.edit-mode .card { border-color: rgba(10,132,255,0.45); }
+body.edit-mode .card:hover { transform: none; background: var(--card-bg); }
+body.edit-mode .card-refresh { opacity: 0.35; pointer-events: none; }
+body.edit-mode .grid-stack-item > .ui-resizable-se {
+  width: 22px; height: 22px;
+  background-color: rgba(10,132,255,0.85);
+  border-radius: 6px 0 0 0;
+  filter: none;
+  opacity: 1;
+}
+body.edit-mode .grid-stack-item.ui-draggable-disabled > .ui-resizable-se { display: block; }
+.grid-stack-item.ui-draggable-dragging .card,
+.grid-stack-item.ui-resizable-resizing .card {
+  box-shadow: 0 12px 40px rgba(0,0,0,0.45);
+  border-color: var(--accent-orange);
+}
+.grid-stack-item.ui-draggable-dragging { cursor: grabbing; }
+
+/* 編輯工具列 */
+.edit-toolbar {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+  display: none; gap: 10px; align-items: center;
+  background: rgba(30,30,50,0.95); backdrop-filter: blur(20px);
+  border: 1px solid var(--card-border); border-radius: 50px;
+  padding: 10px 18px; z-index: 400; box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  white-space: nowrap;
+}
+body.edit-mode .edit-toolbar { display: flex; }
+.edit-toolbar-label { color: var(--text-tertiary); font-size: 12px; }
+.edit-toolbar-btn {
+  background: transparent; border: none; color: var(--text-secondary);
+  font-size: 13px; font-weight: 500; padding: 6px 14px; border-radius: 20px;
+  cursor: pointer; transition: var(--transition); font-family: inherit;
+  display: flex; align-items: center; gap: 6px;
+}
+.edit-toolbar-btn:hover { background: rgba(255,255,255,0.1); color: var(--text-primary); }
+.edit-toolbar-btn.primary { background: var(--accent-blue); color: white; }
+.edit-toolbar-btn.primary:hover { opacity: 0.9; background: var(--accent-blue); }
+.edit-toolbar-btn.danger { color: var(--accent-red); }
+.edit-toolbar-btn.danger:hover { background: rgba(255,69,58,0.15); color: var(--accent-red); }
+.edit-toolbar-divider { width: 1px; height: 20px; background: var(--card-border); }
+
 /* ===== 淺色主題修正 ===== */
 body[data-theme="light"] .alert-banner { color: rgba(0,0,0,0.82); background: rgba(255,159,10,0.14); }
 body[data-theme="light"] .alert-banner code { background: rgba(0,0,0,0.08); color: #0066CC; }
@@ -475,34 +419,21 @@ body[data-theme="light"] .edit-toolbar-btn { color: rgba(0,0,0,0.55); }
 body[data-theme="light"] .edit-toolbar-btn:hover { background: rgba(0,0,0,0.06); color: rgba(0,0,0,0.85); }
 body[data-theme="light"] .edit-toolbar-divider { background: rgba(0,0,0,0.08); }
 body[data-theme="light"] .drag-handle { background: rgba(0,0,0,0.06); color: rgba(0,0,0,0.35); }
-body[data-theme="light"] .drag-handle:hover { background: var(--accent-blue); color: white; }
-body[data-theme="light"] .resize-handle { background: linear-gradient(135deg, transparent 50%, rgba(0,0,0,0.08) 50%); }
-body[data-theme="light"] .resize-handle::after { filter: invert(1); }
-body[data-theme="light"] .resize-handle:hover { background: linear-gradient(135deg, transparent 50%, var(--accent-blue) 50%); }
-body[data-theme="light"] .drop-indicator { border-color: var(--accent-blue); background: rgba(10,132,255,0.15); }
+body[data-theme="light"] .drag-handle:hover { background: var(--accent-blue); color: #fff; }
+body[data-theme="light"] .grid-stack-placeholder > .placeholder-content { background-color: rgba(10,132,255,0.12) !important; }
 
 /* ===== 響應式 ===== */
-@media (max-width: 1100px) {
-  .dashboard { grid-template-columns: repeat(4, 1fr); --grid-cols: 4; }
-  .card--hero { grid-column: 1 / -1; grid-row: span 2; }
-  .card--secondary { grid-column: span 2; grid-row: span 2; }
-  .card--full { grid-column: 1 / -1; grid-row: span 2; }
-  .edit-grid-overlay::before { background-size: calc((100% - 64px) / 4) var(--row-height); }
-}
 @media (max-width: 760px) {
-  .dashboard { grid-template-columns: 1fr; padding: 16px; gap: 12px; --grid-cols: 1; }
-  .card--hero, .card--secondary, .card--full { grid-column: 1; grid-row: auto; min-height: auto; }
   .header { padding: 20px 16px 12px; flex-direction: column; align-items: flex-start; gap: 10px; }
-  .alert-banner { margin: 0 16px 4px; }
   .header-right { width: 100%; justify-content: space-between; }
-  .weather-hero-top { gap: 16px; }
-  .weather-hero-icon { font-size: 64px; }
-  .weather-hero-temp { font-size: 48px; }
-  .weather-hero-temp .temp-unit { font-size: 22px; }
+  .alert-banner { margin: 0 16px 4px; }
+  .grid-stack { padding: 0 12px 24px; }
+  .weather-hero-icon { font-size: 56px; }
+  .weather-hero-temp { font-size: 44px; }
+  .weather-hero-temp .temp-unit { font-size: 20px; }
   .holiday-card-content { gap: 20px; }
-  .holiday-upcoming { border-left: none; border-top: 1px solid rgba(255,255,255,0.08); padding-left: 0; padding-top: 16px; }
-  .edit-grid-overlay::before { display: none; }
-  .edit-toolbar { left: 16px; right: 16px; bottom: 16px; transform: none; border-radius: 16px; justify-content: center; flex-wrap: wrap; }
+  .holiday-upcoming { border-left: none; border-top: 1px solid rgba(255,255,255,0.08); padding-left: 0; padding-top: 14px; }
+  .edit-toolbar { left: 12px; right: 12px; bottom: 12px; transform: none; border-radius: 16px; justify-content: center; flex-wrap: wrap; }
 }
 
 .skeleton {
@@ -537,156 +468,170 @@ body[data-theme="light"] .drop-indicator { border-color: var(--accent-blue); bac
   </div>
 </div>
 
-<div class="edit-grid-overlay" id="editGridOverlay"></div>
-
-<div class="dashboard" id="dashboard">
-  <!-- 卡一：即時天氣（主卡片） -->
-  <div class="card card--hero" data-card-id="weather" data-default-col="1" data-default-row="1" data-default-col-span="3" data-default-row-span="2">
-    <div class="card-header">
-      <div class="drag-handle" title="拖曳移動">&#9776;</div>
-      <div class="card-title"><span class="card-icon">&#9728;&#65039;</span> 列治文天氣</div>
-      <button class="card-refresh" onclick="refreshCard('weather', this)" title="手動更新"><span class="refresh-icon">&#8635;</span></button>
-    </div>
-    <div class="resize-handle" data-resize="weather"></div>
-    <div class="card-content weather-hero" id="weather-content">
-      <div class="weather-hero-top">
-        <div class="weather-hero-icon" id="weather-icon">&#9728;&#65039;</div>
-        <div class="weather-hero-main">
-          <div class="weather-hero-temp">
-            <span class="temp-value" id="weather-temp">--</span>
-            <span class="temp-unit" id="weather-unit">&#176;C</span>
-          </div>
-          <div class="weather-hero-desc" id="weather-desc">載入中…</div>
-          <div class="weather-hero-details">
-            <div class="weather-hero-detail"><span class="weather-hero-detail-label">體感溫度</span><span class="weather-hero-detail-value" id="weather-feels">--</span></div>
-            <div class="weather-hero-detail"><span class="weather-hero-detail-label">濕度</span><span class="weather-hero-detail-value" id="weather-humidity">--</span></div>
-            <div class="weather-hero-detail"><span class="weather-hero-detail-label">風速</span><span class="weather-hero-detail-value" id="weather-wind">--</span></div>
-          </div>
+<div class="grid-stack" id="dashboard">
+  <!-- 卡一：即時天氣 -->
+  <div class="grid-stack-item" gs-id="weather" gs-x="0" gs-y="0" gs-w="6" gs-h="4">
+    <div class="grid-stack-item-content">
+      <div class="card">
+        <div class="card-header">
+          <div class="drag-handle" title="拖曳移動">&#9776;</div>
+          <div class="card-title"><span class="card-icon">&#9728;&#65039;</span> 列治文天氣</div>
+          <button class="card-refresh" onclick="refreshCard('weather', this)" title="手動更新"><span class="refresh-icon">&#8635;</span></button>
         </div>
+        <div class="card-content weather-hero" id="weather-content">
+          <div class="weather-hero-top">
+            <div class="weather-hero-icon" id="weather-icon">&#9728;&#65039;</div>
+            <div class="weather-hero-main">
+              <div class="weather-hero-temp">
+                <span class="temp-value" id="weather-temp">--</span>
+                <span class="temp-unit" id="weather-unit">&#176;C</span>
+              </div>
+              <div class="weather-hero-desc" id="weather-desc">載入中…</div>
+              <div class="weather-hero-details">
+                <div class="weather-hero-detail"><span class="weather-hero-detail-label">體感溫度</span><span class="weather-hero-detail-value" id="weather-feels">--</span></div>
+                <div class="weather-hero-detail"><span class="weather-hero-detail-label">濕度</span><span class="weather-hero-detail-value" id="weather-humidity">--</span></div>
+                <div class="weather-hero-detail"><span class="weather-hero-detail-label">風速</span><span class="weather-hero-detail-value" id="weather-wind">--</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="weather-today-bar" id="weather-today"></div>
+        </div>
+        <div class="card-updated" id="weather-updated">--</div>
       </div>
-      <div class="weather-today-bar" id="weather-today"></div>
     </div>
-    <div class="card-updated" id="weather-updated">--</div>
   </div>
 
   <!-- 卡二：九日預報 -->
-  <div class="card card--secondary" data-card-id="forecast" data-default-col="4" data-default-row="1" data-default-col-span="3" data-default-row-span="2">
-    <div class="card-header">
-      <div class="drag-handle" title="拖曳移動">&#9776;</div>
-      <div class="card-title"><span class="card-icon">&#127780;&#65039;</span> 九日天氣預報</div>
-      <button class="card-refresh" onclick="refreshCard('forecast', this)" title="手動更新"><span class="refresh-icon">&#8635;</span></button>
-    </div>
-    <div class="resize-handle" data-resize="forecast"></div>
-    <div class="card-content">
-      <div class="forecast-list" id="forecast-list">
-        <div class="skeleton" style="height:80px;flex:1"></div>
+  <div class="grid-stack-item" gs-id="forecast" gs-x="6" gs-y="0" gs-w="6" gs-h="4">
+    <div class="grid-stack-item-content">
+      <div class="card">
+        <div class="card-header">
+          <div class="drag-handle" title="拖曳移動">&#9776;</div>
+          <div class="card-title"><span class="card-icon">&#127780;&#65039;</span> 九日天氣預報</div>
+          <button class="card-refresh" onclick="refreshCard('forecast', this)" title="手動更新"><span class="refresh-icon">&#8635;</span></button>
+        </div>
+        <div class="card-content">
+          <div class="forecast-list" id="forecast-list">
+            <div class="skeleton" style="height:80px;flex:1"></div>
+          </div>
+        </div>
+        <div class="card-updated" id="forecast-updated">--</div>
       </div>
     </div>
-    <div class="card-updated" id="forecast-updated">--</div>
   </div>
 
   <!-- 卡三：日出日落 -->
-  <div class="card card--secondary sun-card" data-card-id="sun" data-default-col="1" data-default-row="3" data-default-col-span="3" data-default-row-span="2">
-    <div class="card-header">
-      <div class="drag-handle" title="拖曳移動">&#9776;</div>
-      <div class="card-title"><span class="card-icon">&#127749;</span> 日出日落</div>
-      <button class="card-refresh" onclick="refreshCard('sun', this)" title="手動更新"><span class="refresh-icon">&#8635;</span></button>
-    </div>
-    <div class="resize-handle" data-resize="sun"></div>
-    <div class="card-content" style="align-items:center;justify-content:center;width:100%">
-      <div class="sun-arc-container">
-        <div class="sun-arc">
-          <svg viewBox="0 0 180 90">
-            <path d="M 10 85 Q 90 -10 170 85" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="2" stroke-dasharray="3,4"/>
-            <path d="M 10 85 Q 90 -10 170 85" fill="none" stroke="rgba(255,159,10,0.3)" stroke-width="2"/>
-          </svg>
-          <div class="sun-dot" id="sun-dot" style="left:10px;top:85px"></div>
+  <div class="grid-stack-item" gs-id="sun" gs-x="0" gs-y="4" gs-w="4" gs-h="4">
+    <div class="grid-stack-item-content">
+      <div class="card sun-card">
+        <div class="card-header">
+          <div class="drag-handle" title="拖曳移動">&#9776;</div>
+          <div class="card-title"><span class="card-icon">&#127749;</span> 日出日落</div>
+          <button class="card-refresh" onclick="refreshCard('sun', this)" title="手動更新"><span class="refresh-icon">&#8635;</span></button>
         </div>
+        <div class="card-content">
+          <div class="sun-arc-container">
+            <div class="sun-arc">
+              <svg viewBox="0 0 180 90">
+                <path d="M 10 85 Q 90 -10 170 85" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="2" stroke-dasharray="3,4"/>
+                <path d="M 10 85 Q 90 -10 170 85" fill="none" stroke="rgba(255,159,10,0.3)" stroke-width="2"/>
+              </svg>
+              <div class="sun-dot" id="sun-dot" style="left:10px;top:85px"></div>
+            </div>
+          </div>
+          <div class="sun-times">
+            <div class="sun-time">
+              <div class="sun-time-icon">&#127749;</div>
+              <div class="sun-time-value" id="sunrise-time">--:--</div>
+              <div class="sun-time-label">日出</div>
+            </div>
+            <div class="sun-time">
+              <div class="sun-time-icon">&#127769;</div>
+              <div class="sun-time-value" id="sunset-time">--:--</div>
+              <div class="sun-time-label">日落</div>
+            </div>
+          </div>
+          <div class="sun-duration"><span class="sun-duration-value" id="sun-duration">日照：-- 小時 -- 分</span></div>
+        </div>
+        <div class="card-updated" id="sun-updated">--</div>
       </div>
-      <div class="sun-times">
-        <div class="sun-time">
-          <div class="sun-time-icon">&#127749;</div>
-          <div class="sun-time-value" id="sunrise-time">--:--</div>
-          <div class="sun-time-label">日出</div>
-        </div>
-        <div class="sun-time">
-          <div class="sun-time-icon">&#127769;</div>
-          <div class="sun-time-value" id="sunset-time">--:--</div>
-          <div class="sun-time-label">日落</div>
-        </div>
-      </div>
-      <div class="sun-duration"><span class="sun-duration-value" id="sun-duration">日照：-- 小時 -- 分</span></div>
     </div>
-    <div class="card-updated" id="sun-updated">--</div>
   </div>
 
   <!-- 卡四：港幣匯率 -->
-  <div class="card card--secondary" data-card-id="exchange" data-default-col="4" data-default-row="3" data-default-col-span="3" data-default-row-span="2">
-    <div class="card-header">
-      <div class="drag-handle" title="拖曳移動">&#9776;</div>
-      <div class="card-title"><span class="card-icon">&#128176;</span> 港幣匯率</div>
-      <button class="card-refresh" onclick="refreshCard('exchange', this)" title="手動更新"><span class="refresh-icon">&#8635;</span></button>
-    </div>
-    <div class="resize-handle" data-resize="exchange"></div>
-    <div class="card-content">
-      <div class="exchange-list" id="exchange-list">
-        <div class="skeleton" style="height:40px"></div>
-        <div class="skeleton" style="height:40px"></div>
-        <div class="skeleton" style="height:40px"></div>
+  <div class="grid-stack-item" gs-id="exchange" gs-x="4" gs-y="4" gs-w="4" gs-h="4">
+    <div class="grid-stack-item-content">
+      <div class="card">
+        <div class="card-header">
+          <div class="drag-handle" title="拖曳移動">&#9776;</div>
+          <div class="card-title"><span class="card-icon">&#128176;</span> 港幣匯率</div>
+          <button class="card-refresh" onclick="refreshCard('exchange', this)" title="手動更新"><span class="refresh-icon">&#8635;</span></button>
+        </div>
+        <div class="card-content">
+          <div class="exchange-list" id="exchange-list">
+            <div class="skeleton" style="height:40px"></div>
+            <div class="skeleton" style="height:40px"></div>
+            <div class="skeleton" style="height:40px"></div>
+          </div>
+        </div>
+        <div class="card-updated" id="exchange-updated">--</div>
       </div>
     </div>
-    <div class="card-updated" id="exchange-updated">--</div>
   </div>
 
   <!-- 卡五：環球市場 -->
-  <div class="card card--secondary" data-card-id="markets" data-default-col="1" data-default-row="5" data-default-col-span="3" data-default-row-span="2">
-    <div class="card-header">
-      <div class="drag-handle" title="拖曳移動">&#9776;</div>
-      <div class="card-title"><span class="card-icon">&#128200;</span> 環球市場</div>
-      <button class="card-refresh" onclick="refreshCard('markets', this)" title="手動更新"><span class="refresh-icon">&#8635;</span></button>
-    </div>
-    <div class="resize-handle" data-resize="markets"></div>
-    <div class="card-content">
-      <div class="markets-list" id="markets-list">
-        <div class="skeleton" style="height:30px"></div>
-        <div class="skeleton" style="height:30px"></div>
-        <div class="skeleton" style="height:30px"></div>
-        <div class="skeleton" style="height:30px"></div>
-        <div class="skeleton" style="height:30px"></div>
+  <div class="grid-stack-item" gs-id="markets" gs-x="8" gs-y="4" gs-w="4" gs-h="4">
+    <div class="grid-stack-item-content">
+      <div class="card">
+        <div class="card-header">
+          <div class="drag-handle" title="拖曳移動">&#9776;</div>
+          <div class="card-title"><span class="card-icon">&#128200;</span> 環球市場</div>
+          <button class="card-refresh" onclick="refreshCard('markets', this)" title="手動更新"><span class="refresh-icon">&#8635;</span></button>
+        </div>
+        <div class="card-content">
+          <div class="markets-list" id="markets-list">
+            <div class="skeleton" style="height:30px"></div>
+            <div class="skeleton" style="height:30px"></div>
+            <div class="skeleton" style="height:30px"></div>
+            <div class="skeleton" style="height:30px"></div>
+            <div class="skeleton" style="height:30px"></div>
+          </div>
+        </div>
+        <div class="card-updated" id="markets-updated">--</div>
       </div>
     </div>
-    <div class="card-updated" id="markets-updated">--</div>
   </div>
 
-  <!-- 卡六：BC 省公眾假期（全寬） -->
-  <div class="card card--full" data-card-id="holidays" data-default-col="4" data-default-row="5" data-default-col-span="3" data-default-row-span="2">
-    <div class="card-header">
-      <div class="drag-handle" title="拖曳移動">&#9776;</div>
-      <div class="card-title"><span class="card-icon">&#127873;</span> BC 省公眾假期</div>
-      <button class="card-refresh" onclick="refreshCard('holidays', this)" title="手動更新"><span class="refresh-icon">&#8635;</span></button>
-    </div>
-    <div class="resize-handle" data-resize="holidays"></div>
-    <div class="card-content holiday-card-content" id="holidays-content">
-      <div class="holiday-main">
-        <div class="holiday-countdown" id="holiday-countdown">--</div>
-        <div class="holiday-days-label" id="holiday-days-label">日後</div>
-        <div class="holiday-name" id="holiday-name">載入中…</div>
-        <div class="holiday-date" id="holiday-date"></div>
-        <div class="holiday-type-badge" id="holiday-type"></div>
+  <!-- 卡六：BC 省公眾假期 -->
+  <div class="grid-stack-item" gs-id="holidays" gs-x="0" gs-y="8" gs-w="12" gs-h="4">
+    <div class="grid-stack-item-content">
+      <div class="card">
+        <div class="card-header">
+          <div class="drag-handle" title="拖曳移動">&#9776;</div>
+          <div class="card-title"><span class="card-icon">&#127873;</span> BC 省公眾假期</div>
+          <button class="card-refresh" onclick="refreshCard('holidays', this)" title="手動更新"><span class="refresh-icon">&#8635;</span></button>
+        </div>
+        <div class="card-content holiday-card-content" id="holidays-content">
+          <div class="holiday-main">
+            <div class="holiday-countdown" id="holiday-countdown">--</div>
+            <div class="holiday-days-label" id="holiday-days-label">日後</div>
+            <div class="holiday-name" id="holiday-name">載入中…</div>
+            <div class="holiday-date" id="holiday-date"></div>
+            <div class="holiday-type-badge" id="holiday-type"></div>
+          </div>
+          <div class="holiday-upcoming">
+            <div class="holiday-upcoming-title">即將到來</div>
+            <div id="holiday-upcoming"></div>
+          </div>
+        </div>
+        <div class="card-updated" id="holidays-updated">--</div>
       </div>
-      <div class="holiday-upcoming">
-        <div class="holiday-upcoming-title">即將到來</div>
-        <div id="holiday-upcoming"></div>
-      </div>
     </div>
-    <div class="card-updated" id="holidays-updated">--</div>
   </div>
 </div>
 
-<div class="drop-indicator" id="dropIndicator"></div>
-
 <div class="edit-toolbar" id="editToolbar">
-  <span style="color:var(--text-tertiary);font-size:12px;">編輯模式</span>
+  <span class="edit-toolbar-label">編輯模式</span>
   <div class="edit-toolbar-divider"></div>
   <button class="edit-toolbar-btn" onclick="resetLayout()">&#128472; 重設佈局</button>
   <div class="edit-toolbar-divider"></div>
@@ -735,6 +680,7 @@ body[data-theme="light"] .drop-indicator { border-color: var(--accent-blue); bac
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/gridstack@10.3.1/dist/gridstack-all.js"></script>
 <script>
 /* =========================================================
    0. 基礎設定
@@ -795,7 +741,6 @@ const WEEKDAY_ZH = ['日','一','二','三','四','五','六'];
 const DEFAULT_SETTINGS = { name:'Marco', tempUnit:'C', theme:'dark', autoRefresh:true };
 let settings = { ...DEFAULT_SETTINGS };
 
-function getSettings(){ return settings; }
 function cToF(c){ return c*9/5+32; }
 function formatTemp(c){ return Math.round(settings.tempUnit === 'F' ? cToF(c) : c); }
 function tempUnit(){ return settings.tempUnit === 'F' ? '\u00B0F' : '\u00B0C'; }
@@ -885,234 +830,172 @@ function toggleSettings(){
 }
 
 /* =========================================================
-   2. 編輯模式：拖曳、拉伸、佈局持久化
+   2. 版面編輯（GridStack）
    ========================================================= */
+const LAYOUT_KEY = 'dashboard-layout-v2';
+const DESKTOP_COLS = 12;
+const NARROW_BREAKPOINT = 760;
+
+const DEFAULT_LAYOUT = [
+  { id:'weather',  x:0, y:0, w:6, h:4 },
+  { id:'forecast', x:6, y:0, w:6, h:4 },
+  { id:'sun',      x:0, y:4, w:4, h:4 },
+  { id:'exchange', x:4, y:4, w:4, h:4 },
+  { id:'markets',  x:8, y:4, w:4, h:4 },
+  { id:'holidays', x:0, y:8, w:12, h:4 }
+];
+
+let grid = null;
 let editMode = false;
-let draggedCard = null;
-let dropTarget = null;
-let resizeCard = null;
-let resizeStart = { x: 0, y: 0, col: 1, row: 1, colSpan: 1, rowSpan: 1 };
+let snapshot = null;
+let desktopLayout = null;
+let lastNarrow = null;
+
+function cardEl(id){
+  return document.querySelector('.grid-stack-item[gs-id="' + id + '"]');
+}
+
+function getSavedLayout(){
+  try {
+    const raw = localStorage.getItem(LAYOUT_KEY);
+    if (!raw) return null;
+    const arr = JSON.parse(raw);
+    if (!Array.isArray(arr) || !arr.length) return null;
+    const valid = arr.filter(it => it && it.id && cardEl(it.id)
+      && Number.isFinite(it.x) && Number.isFinite(it.y)
+      && Number.isFinite(it.w) && Number.isFinite(it.h));
+    return valid.length ? valid : null;
+  } catch(e){ return null; }
+}
+
+function writeAttrs(list){
+  list.forEach(it => {
+    const el = cardEl(it.id);
+    if (!el) return;
+    el.setAttribute('gs-x', it.x);
+    el.setAttribute('gs-y', it.y);
+    el.setAttribute('gs-w', it.w);
+    el.setAttribute('gs-h', it.h);
+  });
+}
+
+function applyLayout(list){
+  if (!grid || !list) return;
+  grid.batchUpdate();
+  list.forEach(it => {
+    const el = cardEl(it.id);
+    if (el) grid.update(el, { x: it.x, y: it.y, w: it.w, h: it.h });
+  });
+  grid.commit();
+}
+
+function currentLayout(){
+  if (!grid) return null;
+  return grid.save(false)
+    .filter(n => n.id)
+    .map(n => ({ id: n.id, x: n.x, y: n.y, w: n.w, h: n.h }));
+}
+
+function initGrid(){
+  if (typeof GridStack === 'undefined') return false;
+
+  const saved = getSavedLayout();
+  if (saved) writeAttrs(saved);
+
+  grid = GridStack.init({
+    column: DESKTOP_COLS,
+    cellHeight: 70,
+    margin: 8,
+    float: false,
+    animate: true,
+    staticGrid: false,
+    draggable: { handle: '.drag-handle', scroll: false },
+    resizable: { handles: 'se' }
+  }, '#dashboard');
+
+  grid.enableMove(false);
+  grid.enableResize(false);
+
+  grid.on('change', () => {
+    if (editMode) snapshot = currentLayout();
+  });
+
+  applyResponsive(true);
+  return true;
+}
+
+function applyResponsive(silent){
+  if (!grid) return;
+  const narrow = window.innerWidth < NARROW_BREAKPOINT;
+  if (narrow === lastNarrow) return;
+  lastNarrow = narrow;
+
+  if (narrow){
+    desktopLayout = silent ? (getSavedLayout() || DEFAULT_LAYOUT) : (currentLayout() || desktopLayout);
+    grid.column(1, 'list');
+  } else {
+    grid.column(DESKTOP_COLS, 'list');
+    if (desktopLayout) applyLayout(desktopLayout);
+  }
+}
+
+function setEditUI(on){
+  editMode = on;
+  document.body.classList.toggle('edit-mode', on);
+  const btn = document.getElementById('editModeBtn');
+  btn.classList.toggle('active', on);
+  btn.innerHTML = on ? '&#10005;' : '&#9998;';
+  btn.title = on ? '關閉編輯（不儲存）' : '編輯版面';
+  if (grid){
+    grid.enableMove(on);
+    grid.enableResize(on);
+  }
+}
 
 function toggleEditMode(){
-  editMode = !editMode;
-  document.body.classList.toggle('edit-mode', editMode);
-  document.getElementById('editGridOverlay').classList.toggle('active', editMode);
-  const btn = document.getElementById('editModeBtn');
-  btn.classList.toggle('active', editMode);
-  btn.textContent = editMode ? '&#10003;' : '&#9998;';
-  btn.title = editMode ? '完成編輯' : '編輯版面';
-  
-  if (editMode) {
-    applySavedLayout();
-    document.querySelectorAll('.card').forEach(card => {
-      card.classList.remove('card--hero', 'card--secondary', 'card--full');
-    });
+  if (!grid){ alert('版面編輯器未能載入，請檢查網絡後重新整理。'); return; }
+  if (!editMode){
+    snapshot = currentLayout();
+    setEditUI(true);
   } else {
-    if (!localStorage.getItem('dashboard-layout')) {
-      restoreDefaultLayout();
-    }
+    cancelEdit();
   }
-}
-
-/* --- 解析 grid-column/row 同時支援 "1 / 4" 和 "1 / span 3" --- */
-function parseGridLine(value){
-  // "1 / 4" 或 "1 / span 3"
-  const parts = value.split('/').map(s => s.trim());
-  const start = parseInt(parts[0]) || 1;
-  let span = 1;
-  if (parts[1]) {
-    const m = parts[1].match(/span\s+(\d+)/i);
-    if (m) span = parseInt(m[1]);
-    else span = parseInt(parts[1]) - start + 1;
-  }
-  return { start, span };
-}
-
-function applySavedLayout(){
-  try {
-    const saved = localStorage.getItem('dashboard-layout');
-    if (saved) {
-      const layout = JSON.parse(saved);
-      Object.entries(layout).forEach(([id, pos]) => {
-        const card = document.querySelector(`[data-card-id="${id}"]`);
-        if (card) {
-          card.style.gridColumn = `${pos.col} / span ${pos.colSpan}`;
-          card.style.gridRow = `${pos.row} / span ${pos.rowSpan}`;
-        }
-      });
-      return;
-    }
-  } catch(e) {}
-  restoreDefaultLayout();
-}
-
-function restoreDefaultLayout(){
-  document.querySelectorAll('.card').forEach(card => {
-    const col = parseInt(card.dataset.defaultCol) || 1;
-    const row = parseInt(card.dataset.defaultRow) || 1;
-    const colSpan = parseInt(card.dataset.defaultColSpan) || 1;
-    const rowSpan = parseInt(card.dataset.defaultRowSpan) || 1;
-    card.style.gridColumn = `${col} / span ${colSpan}`;
-    card.style.gridRow = `${row} / span ${rowSpan}`;
-  });
 }
 
 function saveLayout(){
-  const layout = {};
-  document.querySelectorAll('.card').forEach(card => {
-    const id = card.dataset.cardId;
-    const style = window.getComputedStyle(card);
-    const col = parseGridLine(style.gridColumn);
-    const row = parseGridLine(style.gridRow);
-    layout[id] = { col: col.start, colSpan: col.span, row: row.start, rowSpan: row.span };
-  });
-  localStorage.setItem('dashboard-layout', JSON.stringify(layout));
-  toggleEditMode();
+  if (!grid) return;
+  if (grid.getColumn() === DESKTOP_COLS || !desktopLayout){
+    const layout = currentLayout();
+    if (layout && layout.length) localStorage.setItem(LAYOUT_KEY, JSON.stringify(layout));
+  } else {
+    localStorage.setItem(LAYOUT_KEY, JSON.stringify(desktopLayout));
+  }
+  setEditUI(false);
 }
 
 function cancelEdit(){
-  if (localStorage.getItem('dashboard-layout')) applySavedLayout();
-  else restoreDefaultLayout();
-  toggleEditMode();
+  if (snapshot) applyLayout(snapshot);
+  else {
+    const saved = getSavedLayout() || DEFAULT_LAYOUT;
+    if (grid && grid.getColumn() === DESKTOP_COLS) applyLayout(saved);
+  }
+  setEditUI(false);
 }
 
 function resetLayout(){
-  localStorage.removeItem('dashboard-layout');
-  restoreDefaultLayout();
+  localStorage.removeItem(LAYOUT_KEY);
+  desktopLayout = DEFAULT_LAYOUT.map(it => ({ ...it }));
+  if (grid){
+    if (grid.getColumn() !== DESKTOP_COLS) grid.column(DESKTOP_COLS, 'list');
+    applyLayout(DEFAULT_LAYOUT);
+  }
+  snapshot = currentLayout();
 }
 
-/* ----- 拖曳移動（事件委派） ----- */
-function initDragDrop(){
-  const dashboard = document.getElementById('dashboard');
-  const dropIndicator = document.getElementById('dropIndicator');
-  
-  // 用事件委派：在 dashboard 上監聽 pointerdown
-  dashboard.addEventListener('pointerdown', (e) => {
-    if (!editMode) return;
-    const handle = e.target.closest('.drag-handle');
-    if (!handle) return;
-    
-    e.preventDefault();
-    e.stopPropagation();
-    draggedCard = handle.closest('.card');
-    if (!draggedCard) return;
-    
-    draggedCard.classList.add('dragging');
-    draggedCard.setPointerCapture(e.pointerId);
-    
-    const dashRect = dashboard.getBoundingClientRect();
-    const style = window.getComputedStyle(draggedCard);
-    const col = parseGridLine(style.gridColumn);
-    const row = parseGridLine(style.gridRow);
-    const colSpan = col.span;
-    const rowSpan = row.span;
-    
-    function onDragMove(e){
-      const x = e.clientX - dashRect.left;
-      const y = e.clientY - dashRect.top;
-      
-      // dashboard 內容區寬度（扣除左右 padding 32px*2）
-      const contentWidth = dashRect.width - 64;
-      const colWidth = contentWidth / GRID_COLS;
-      
-      // 計算最近的格位（從第 1 格開始）
-      const colIdx = Math.max(1, Math.min(GRID_COLS - colSpan + 1, 
-        Math.round(x / colWidth) + 1));
-      const rowIdx = Math.max(1, Math.round(y / (ROW_HEIGHT + GAP)) + 1);
-      
-      // 顯示放置指示器
-      const indicatorLeft = 32 + (colIdx - 1) * colWidth;
-      const indicatorTop = 10 + (rowIdx - 1) * (ROW_HEIGHT + GAP); // dashboard padding-top 10px
-      const indicatorWidth = colSpan * colWidth - GAP;
-      const indicatorHeight = rowSpan * (ROW_HEIGHT + GAP) - GAP;
-      
-      dropIndicator.style.left = indicatorLeft + 'px';
-      dropIndicator.style.top = indicatorTop + 'px';
-      dropIndicator.style.width = indicatorWidth + 'px';
-      dropIndicator.style.height = indicatorHeight + 'px';
-      dropIndicator.classList.add('active');
-      
-      dropTarget = { col: colIdx, row: rowIdx };
-    }
-    
-    function onDragEnd(e){
-      document.removeEventListener('pointermove', onDragMove);
-      document.removeEventListener('pointerup', onDragEnd);
-      draggedCard.releasePointerCapture(e.pointerId);
-      draggedCard.classList.remove('dragging');
-      dropIndicator.classList.remove('active');
-      
-      if (dropTarget) {
-        const style = window.getComputedStyle(draggedCard);
-        const col = parseGridLine(style.gridColumn);
-        const row = parseGridLine(style.gridRow);
-        const finalCol = Math.min(dropTarget.col, GRID_COLS - col.span + 1);
-        const finalRow = Math.max(1, dropTarget.row);
-        draggedCard.style.gridColumn = `${finalCol} / span ${col.span}`;
-        draggedCard.style.gridRow = `${finalRow} / span ${row.span}`;
-      }
-      draggedCard = null;
-      dropTarget = null;
-    }
-    
-    document.addEventListener('pointermove', onDragMove);
-    document.addEventListener('pointerup', onDragEnd);
-  });
-}
-
-/* ----- 拉伸改大小（事件委派） ----- */
-function initResize(){
-  const dashboard = document.getElementById('dashboard');
-  
-  dashboard.addEventListener('pointerdown', (e) => {
-    if (!editMode) return;
-    const handle = e.target.closest('.resize-handle');
-    if (!handle) return;
-    
-    e.preventDefault();
-    e.stopPropagation();
-    resizeCard = handle.closest('.card');
-    if (!resizeCard) return;
-    
-    resizeCard.classList.add('resizing');
-    resizeCard.setPointerCapture(e.pointerId);
-    
-    const style = window.getComputedStyle(resizeCard);
-    const col = parseGridLine(style.gridColumn);
-    const row = parseGridLine(style.gridRow);
-    resizeStart = {
-      x: e.clientX, y: e.clientY,
-      col: col.start, row: row.start,
-      colSpan: col.span, rowSpan: row.span
-    };
-    
-    function onResizeMove(e){
-      const dx = e.clientX - resizeStart.x;
-      const dy = e.clientY - resizeStart.y;
-      const dashRect = dashboard.getBoundingClientRect();
-      const contentWidth = dashRect.width - 64;
-      const colWidth = contentWidth / GRID_COLS;
-      
-      let newColSpan = Math.max(1, Math.min(GRID_COLS - resizeStart.col + 1, 
-        Math.round(resizeStart.colSpan + dx / colWidth)));
-      let newRowSpan = Math.max(1, Math.round(resizeStart.rowSpan + dy / (ROW_HEIGHT + GAP)));
-      
-      resizeCard.style.gridColumn = `${resizeStart.col} / span ${newColSpan}`;
-      resizeCard.style.gridRow = `${resizeStart.row} / span ${newRowSpan}`;
-    }
-    
-    function onResizeEnd(e){
-      document.removeEventListener('pointermove', onResizeMove);
-      document.removeEventListener('pointerup', onResizeEnd);
-      resizeCard.releasePointerCapture(e.pointerId);
-      resizeCard.classList.remove('resizing');
-      resizeCard = null;
-    }
-    
-    document.addEventListener('pointermove', onResizeMove);
-    document.addEventListener('pointerup', onResizeEnd);
-  });
-}
+window.addEventListener('resize', () => {
+  clearTimeout(window.__gridResizeTimer);
+  window.__gridResizeTimer = setTimeout(() => applyResponsive(false), 150);
+});
 
 /* =========================================================
    3. 資料層：先試本機 API，失敗則直連公開 API
@@ -1127,13 +1010,9 @@ function setStatus(m){
   const banner = document.getElementById('alertBanner');
   const alertText = document.getElementById('alertText');
 
-  if (m === 'local'){
+  if (m === 'local' || m === 'static'){
     pill.classList.remove('offline');
-    text.textContent = '已連線';
-    banner.classList.remove('show');
-  } else if (m === 'static'){
-    pill.classList.remove('offline');
-    text.textContent = '已連線';
+    text.textContent = m === 'local' ? '已連線' : '已連線';
     banner.classList.remove('show');
   } else if (m === 'direct'){
     pill.classList.add('offline');
@@ -1541,6 +1420,10 @@ async function init(){
   setInterval(updateClock, 1000);
   setInterval(updateGreeting, 60000);
 
+  if (!initGrid()) {
+    console.warn('GridStack 未能載入，版面編輯功能停用。');
+  }
+
   let local = false;
   try {
     const r = await fetch('/api/health', { cache:'no-store' });
@@ -1563,18 +1446,6 @@ async function init(){
   setInterval(() => {
     if (sunData) renderSun(sunData[0], sunData[1]);
   }, 60000);
-
-  // 初始化編輯模式功能
-  initDragDrop();
-  initResize();
-  
-  // 載入儲存的佈局（非編輯模式也要套用）
-  if (localStorage.getItem('dashboard-layout')) {
-    applySavedLayout();
-    document.querySelectorAll('.card').forEach(card => {
-      card.classList.remove('card--hero', 'card--secondary', 'card--full');
-    });
-  }
 }
 
 init();
