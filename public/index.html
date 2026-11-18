@@ -14,8 +14,8 @@
   --card-border: rgba(255, 255, 255, 0.12);
   --card-hover: rgba(255, 255, 255, 0.12);
   --text-primary: rgba(255, 255, 255, 0.95);
-  --text-secondary: rgba(255, 255, 255, 0.6);
-  --text-tertiary: rgba(255, 255, 255, 0.4);
+  --text-secondary: rgba(255, 255, 255, 0.62);
+  --text-tertiary: rgba(255, 255, 255, 0.44);
   --accent-blue: #0A84FF;
   --accent-green: #30D158;
   --accent-red: #FF453A;
@@ -62,14 +62,14 @@ body::after {
   padding: 16px 32px 10px;
   width: 100%; max-width: 1400px; margin: 0 auto;
 }
-.header-left h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
-.header-left p { font-size: 15px; color: var(--text-secondary); margin-top: 2px; }
+.header-left h1 { font-size: 30px; font-weight: 700; letter-spacing: -0.5px; }
+.header-left p { font-size: 16px; color: var(--text-secondary); margin-top: 3px; }
 .header-right { display: flex; align-items: center; gap: 12px; }
 
 .status-pill {
   display: inline-flex; align-items: center; gap: 6px;
-  font-size: 11px; font-weight: 600;
-  padding: 5px 11px; border-radius: 20px;
+  font-size: 12.5px; font-weight: 600;
+  padding: 5px 12px; border-radius: 20px;
   background: rgba(48,209,88,0.15); color: var(--accent-green);
   border: 1px solid rgba(48,209,88,0.25);
   transition: var(--transition);
@@ -80,7 +80,7 @@ body::after {
   border-color: rgba(255,159,10,0.25);
 }
 .status-dot {
-  width: 6px; height: 6px; border-radius: 50%;
+  width: 7px; height: 7px; border-radius: 50%;
   background: currentColor;
   box-shadow: 0 0 8px currentColor;
 }
@@ -88,16 +88,16 @@ body::after {
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.25} }
 
 .header-clock {
-  font-size: 15px; color: var(--text-secondary);
+  font-size: 16.5px; color: var(--text-secondary);
   font-variant-numeric: tabular-nums; font-weight: 500;
 }
 
 .settings-btn, .edit-mode-btn {
   background: var(--card-bg); border: 1px solid var(--card-border);
-  border-radius: 50%; width: 36px; height: 36px;
+  border-radius: 50%; width: 38px; height: 38px;
   display: flex; align-items: center; justify-content: center;
   cursor: pointer; transition: var(--transition);
-  backdrop-filter: blur(var(--blur)); color: var(--text-primary); font-size: 18px;
+  backdrop-filter: blur(var(--blur)); color: var(--text-primary); font-size: 19px;
   line-height: 1;
 }
 .settings-btn:hover, .edit-mode-btn:hover { background: var(--card-hover); transform: scale(1.05); }
@@ -112,7 +112,7 @@ body::after {
   border-radius: 14px;
   background: rgba(255,159,10,0.12);
   border: 1px solid rgba(255,159,10,0.3);
-  font-size: 13.5px; line-height: 1.7;
+  font-size: 14.5px; line-height: 1.7;
   color: rgba(255,255,255,0.9);
 }
 .alert-banner.show { display: block; }
@@ -121,13 +121,13 @@ body::after {
   background: rgba(0,0,0,0.35);
   padding: 2px 7px; border-radius: 5px;
   font-family: ui-monospace, 'SF Mono', Menlo, monospace;
-  font-size: 12.5px; color: #7FD4FF;
+  font-size: 13.5px; color: #7FD4FF;
 }
 .alert-banner .banner-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
 .banner-btn {
   background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.18);
-  color: var(--text-primary); font-size: 12.5px; font-weight: 600;
-  padding: 6px 14px; border-radius: 8px; cursor: pointer;
+  color: var(--text-primary); font-size: 13.5px; font-weight: 600;
+  padding: 7px 15px; border-radius: 8px; cursor: pointer;
   transition: var(--transition); font-family: inherit;
 }
 .banner-btn:hover { background: rgba(255,255,255,0.2); }
@@ -168,15 +168,15 @@ body::after {
 
 .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 8px; }
 .card-title {
-  display: flex; align-items: center; gap: 8px;
-  font-size: 12px; font-weight: 600; color: var(--text-secondary);
-  letter-spacing: 1px; text-transform: uppercase;
+  display: flex; align-items: center; gap: 9px;
+  font-size: 14px; font-weight: 700; color: var(--text-secondary);
+  letter-spacing: 0.8px; text-transform: uppercase;
   flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.card-icon { font-size: 15px; }
+.card-icon { font-size: 17px; }
 .card-refresh {
   background: transparent; border: none; color: var(--text-tertiary);
-  cursor: pointer; font-size: 14px; transition: var(--transition);
+  cursor: pointer; font-size: 16px; transition: var(--transition);
   padding: 4px 8px; border-radius: 8px;
   display: flex; align-items: center; gap: 4px;
   flex-shrink: 0;
@@ -186,7 +186,7 @@ body::after {
 @keyframes spin { from{transform:rotate(0)} to{transform:rotate(360deg)} }
 
 .card-content { flex: 1; display: flex; flex-direction: column; min-height: 0; }
-.card-updated { font-size: 10px; color: var(--text-tertiary); margin-top: 6px; text-align: right; flex-shrink: 0; }
+.card-updated { font-size: 12px; color: var(--text-tertiary); margin-top: 6px; text-align: right; flex-shrink: 0; }
 
 /* 空白／錯誤狀態 */
 .card-state {
@@ -194,8 +194,8 @@ body::after {
   align-items: center; justify-content: center;
   gap: 8px; text-align: center; padding: 16px 4px;
 }
-.card-state-icon { font-size: 26px; opacity: 0.55; }
-.card-state-text { font-size: 12.5px; color: var(--text-tertiary); line-height: 1.7; }
+.card-state-icon { font-size: 28px; opacity: 0.55; }
+.card-state-text { font-size: 14px; color: var(--text-tertiary); line-height: 1.7; }
 .card-state-text b { color: var(--text-secondary); font-weight: 600; }
 
 /* ===== 即時天氣 ===== */
@@ -204,28 +204,28 @@ body::after {
   display: flex; align-items: flex-start; gap: 20px;
   flex: 1; min-height: 0;
 }
-.weather-hero-icon { font-size: 72px; line-height: 1; flex-shrink: 0; }
+.weather-hero-icon { font-size: 76px; line-height: 1; flex-shrink: 0; }
 .weather-hero-main { flex: 1; display: flex; flex-direction: column; justify-content: center; min-width: 0; }
 .weather-hero-temp {
-  display: flex; align-items: baseline; gap: 4px;
-  font-size: 56px; font-weight: 200; letter-spacing: -2px; line-height: 1;
+  display: flex; align-items: baseline; gap: 5px;
+  font-size: 66px; font-weight: 200; letter-spacing: -2px; line-height: 1;
 }
-.weather-hero-temp .temp-unit { font-size: 26px; font-weight: 200; color: var(--text-secondary); }
-.weather-hero-desc { font-size: 15px; color: var(--text-secondary); margin-top: 6px; font-weight: 400; }
+.weather-hero-temp .temp-unit { font-size: 30px; font-weight: 200; color: var(--text-secondary); }
+.weather-hero-desc { font-size: 17px; color: var(--text-secondary); margin-top: 6px; font-weight: 400; }
 .weather-hero-details {
-  display: flex; gap: 24px; margin-top: 14px; flex-wrap: wrap;
+  display: flex; gap: 26px; margin-top: 14px; flex-wrap: wrap;
 }
-.weather-hero-detail { display: flex; flex-direction: column; gap: 2px; }
-.weather-hero-detail-label { color: var(--text-tertiary); font-size: 11px; }
-.weather-hero-detail-value { color: var(--text-primary); font-weight: 500; font-size: 15px; }
+.weather-hero-detail { display: flex; flex-direction: column; gap: 3px; }
+.weather-hero-detail-label { color: var(--text-tertiary); font-size: 12.5px; }
+.weather-hero-detail-value { color: var(--text-primary); font-weight: 600; font-size: 17px; }
 .weather-today-bar {
-  display: flex; gap: 18px; align-items: center;
+  display: flex; gap: 20px; align-items: center;
   margin-top: auto; padding-top: 14px;
   border-top: 1px solid rgba(255,255,255,0.07);
-  font-size: 13px; color: var(--text-secondary);
+  font-size: 14.5px; color: var(--text-secondary);
   flex-wrap: wrap; flex-shrink: 0;
 }
-.weather-today-bar b { color: var(--text-primary); font-weight: 600; }
+.weather-today-bar b { color: var(--text-primary); font-weight: 700; }
 .weather-today-bar .wt-sep { color: var(--text-tertiary); }
 
 /* ===== 預報 ===== */
@@ -234,12 +234,12 @@ body::after {
 .forecast-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
 .forecast-day { flex: 1; min-width: 0; text-align: center; padding: 8px 4px; border-radius: 10px; transition: var(--transition); }
 .forecast-day:hover { background: rgba(255,255,255,0.06); }
-.forecast-day .day-name { font-size: 10px; color: var(--text-tertiary); margin-bottom: 6px; white-space: nowrap; }
-.forecast-day .day-icon { font-size: 22px; margin-bottom: 6px; }
-.forecast-day .day-temps { font-size: 12px; font-weight: 500; }
+.forecast-day .day-name { font-size: 12px; color: var(--text-secondary); margin-bottom: 6px; white-space: nowrap; }
+.forecast-day .day-icon { font-size: 25px; margin-bottom: 6px; }
+.forecast-day .day-temps { font-size: 14px; font-weight: 600; }
 .forecast-day .day-high { color: var(--text-primary); }
 .forecast-day .day-low { color: var(--text-tertiary); }
-.forecast-day .day-precip { font-size: 9px; color: var(--accent-blue); margin-top: 3px; }
+.forecast-day .day-precip { font-size: 11px; color: var(--accent-blue); margin-top: 3px; }
 .forecast-day.today { background: rgba(10,132,255,0.15); }
 
 /* ===== 匯率 ===== */
@@ -250,30 +250,30 @@ body::after {
 }
 .exchange-item:last-child { border-bottom: none; }
 .exchange-currency { display: flex; align-items: center; gap: 10px; }
-.exchange-flag { font-size: 22px; }
+.exchange-flag { font-size: 25px; }
 .exchange-info { display: flex; flex-direction: column; }
-.exchange-code { font-size: 15px; font-weight: 600; }
-.exchange-name { font-size: 10.5px; color: var(--text-tertiary); }
+.exchange-code { font-size: 17px; font-weight: 700; }
+.exchange-name { font-size: 12px; color: var(--text-tertiary); }
 .exchange-value { text-align: right; }
-.exchange-rate { font-size: 18px; font-weight: 500; font-variant-numeric: tabular-nums; }
-.exchange-unit { font-size: 10.5px; color: var(--text-tertiary); }
+.exchange-rate { font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.exchange-unit { font-size: 11.5px; color: var(--text-tertiary); }
 
 /* ===== 假期 ===== */
 .holiday-card-content { display: flex; gap: 28px; align-items: center; justify-content: center; flex-wrap: wrap; }
 .holiday-main { text-align: center; padding: 4px 0; flex: 1; min-width: 180px; }
 .holiday-countdown {
-  font-size: 48px; font-weight: 200; letter-spacing: -3px; line-height: 1;
+  font-size: 56px; font-weight: 200; letter-spacing: -3px; line-height: 1;
   background: linear-gradient(135deg, var(--accent-orange), var(--accent-purple));
   -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
 }
-.holiday-days-label { font-size: 13px; color: var(--text-secondary); margin-top: 4px; }
-.holiday-name { font-size: 17px; font-weight: 600; margin-top: 8px; }
-.holiday-date { font-size: 12px; color: var(--text-tertiary); margin-top: 4px; }
-.holiday-type-badge { display: inline-block; font-size: 10px; padding: 3px 10px; border-radius: 8px; margin-top: 8px; }
+.holiday-days-label { font-size: 15px; color: var(--text-secondary); margin-top: 4px; }
+.holiday-name { font-size: 20px; font-weight: 700; margin-top: 8px; }
+.holiday-date { font-size: 13.5px; color: var(--text-tertiary); margin-top: 4px; }
+.holiday-type-badge { display: inline-block; font-size: 11.5px; padding: 3px 10px; border-radius: 8px; margin-top: 8px; }
 .holiday-upcoming { flex: 1; min-width: 200px; border-left: 1px solid rgba(255,255,255,0.08); padding-left: 20px; }
-.holiday-upcoming-title { font-size: 11px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
-.holiday-upcoming-item { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-tertiary); padding: 4px 0; }
-.holiday-upcoming-item span:first-child { color: var(--text-secondary); font-weight: 500; }
+.holiday-upcoming-title { font-size: 12px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+.holiday-upcoming-item { display: flex; justify-content: space-between; font-size: 13.5px; color: var(--text-tertiary); padding: 5px 0; }
+.holiday-upcoming-item span:first-child { color: var(--text-secondary); font-weight: 600; }
 
 /* ===== 日出日落 ===== */
 .sun-card { justify-content: center; align-items: center; }
@@ -282,18 +282,18 @@ body::after {
 .sun-arc { width: 100%; height: 100%; position: relative; }
 .sun-arc svg { width: 100%; height: 100%; }
 .sun-dot {
-  position: absolute; width: 14px; height: 14px;
+  position: absolute; width: 15px; height: 15px;
   background: var(--accent-orange); border-radius: 50%;
   box-shadow: 0 0 20px rgba(255,159,10,0.7);
   transform: translate(-50%, -50%); transition: all 0.5s ease;
 }
-.sun-times { display: flex; justify-content: space-between; width: 100%; max-width: 280px; margin-top: 8px; }
+.sun-times { display: flex; justify-content: space-between; width: 100%; max-width: 300px; margin-top: 8px; }
 .sun-time { text-align: center; flex: 1; }
-.sun-time-icon { font-size: 18px; margin-bottom: 2px; }
-.sun-time-value { font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums; }
-.sun-time-label { font-size: 10.5px; color: var(--text-tertiary); margin-top: 2px; }
+.sun-time-icon { font-size: 20px; margin-bottom: 2px; }
+.sun-time-value { font-size: 18.5px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.sun-time-label { font-size: 12px; color: var(--text-tertiary); margin-top: 2px; }
 .sun-duration { text-align: center; margin-top: 8px; width: 100%; }
-.sun-duration-value { font-size: 13px; color: var(--text-secondary); }
+.sun-duration-value { font-size: 14.5px; color: var(--text-secondary); }
 
 /* ===== 市場 ===== */
 .markets-list { display: flex; flex-direction: column; gap: 4px; flex: 1; justify-content: center; min-height: 0; }
@@ -303,11 +303,11 @@ body::after {
 }
 .market-item:last-child { border-bottom: none; }
 .market-info { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
-.market-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.market-symbol { font-size: 9.5px; color: var(--text-tertiary); }
+.market-name { font-size: 15px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.market-symbol { font-size: 11px; color: var(--text-tertiary); }
 .market-data { text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; flex-shrink: 0; }
-.market-price { font-size: 16px; font-weight: 500; font-variant-numeric: tabular-nums; }
-.market-change { font-size: 12px; font-weight: 500; font-variant-numeric: tabular-nums; display: flex; align-items: center; gap: 3px; }
+.market-price { font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.market-change { font-size: 13.5px; font-weight: 600; font-variant-numeric: tabular-nums; display: flex; align-items: center; gap: 3px; }
 .market-change.up { color: var(--accent-green); }
 .market-change.down { color: var(--accent-red); }
 .market-change.flat { color: var(--text-tertiary); }
@@ -324,14 +324,14 @@ body::after {
   border: 1px solid var(--card-border); border-radius: 24px;
   padding: 32px; width: 90%; max-width: 480px; max-height: 80vh; overflow-y: auto;
 }
-.settings-modal h2 { font-size: 20px; margin-bottom: 20px; }
+.settings-modal h2 { font-size: 21px; margin-bottom: 20px; }
 .settings-section { margin-bottom: 20px; }
-.settings-section h3 { font-size: 13px; color: var(--text-secondary); letter-spacing: 1px; margin-bottom: 10px; }
-.settings-option { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.06); }
-.settings-option label { font-size: 14px; }
+.settings-section h3 { font-size: 14px; color: var(--text-secondary); letter-spacing: 1px; margin-bottom: 10px; }
+.settings-option { display: flex; justify-content: space-between; align-items: center; padding: 11px 0; border-bottom: 1px solid rgba(255,255,255,0.06); }
+.settings-option label { font-size: 15px; }
 .settings-option select, .settings-option input {
   background: rgba(255,255,255,0.1); border: 1px solid var(--card-border);
-  border-radius: 8px; color: var(--text-primary); padding: 6px 12px; font-size: 14px; outline: none;
+  border-radius: 8px; color: var(--text-primary); padding: 7px 12px; font-size: 15px; outline: none;
   font-family: inherit;
 }
 .settings-option select:focus, .settings-option input:focus { border-color: var(--accent-blue); }
@@ -341,20 +341,20 @@ body::after {
 .toggle.active::after { left: 20px; }
 .settings-close {
   background: var(--accent-blue); color: white; border: none; border-radius: 12px;
-  padding: 10px 24px; font-size: 15px; font-weight: 600; cursor: pointer;
+  padding: 11px 24px; font-size: 16px; font-weight: 600; cursor: pointer;
   transition: var(--transition); width: 100%; margin-top: 8px; font-family: inherit;
 }
 .settings-close:hover { opacity: 0.9; }
-.settings-attribution { text-align: center; font-size: 11px; color: var(--text-tertiary); margin-top: 16px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.06); }
+.settings-attribution { text-align: center; font-size: 12px; color: var(--text-tertiary); margin-top: 16px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.06); }
 .settings-attribution a { color: var(--accent-blue); text-decoration: none; }
 
 /* ===== 編輯模式 ===== */
 .drag-handle {
   display: none; align-items: center; justify-content: center;
-  width: 26px; height: 26px; border-radius: 6px;
+  width: 28px; height: 28px; border-radius: 6px;
   background: rgba(255,255,255,0.1); color: var(--text-tertiary);
   cursor: grab; transition: var(--transition);
-  flex-shrink: 0; font-size: 12px; line-height: 1;
+  flex-shrink: 0; font-size: 13px; line-height: 1;
   touch-action: none;
   user-select: none;
 }
@@ -389,10 +389,10 @@ body.edit-mode .grid-stack-item > .ui-resizable-se {
   white-space: nowrap;
 }
 body.edit-mode .edit-toolbar { display: flex; }
-.edit-toolbar-label { color: var(--text-tertiary); font-size: 12px; }
+.edit-toolbar-label { color: var(--text-tertiary); font-size: 13px; }
 .edit-toolbar-btn {
   background: transparent; border: none; color: var(--text-secondary);
-  font-size: 13px; font-weight: 500; padding: 6px 14px; border-radius: 20px;
+  font-size: 14px; font-weight: 600; padding: 7px 15px; border-radius: 20px;
   cursor: pointer; transition: var(--transition); font-family: inherit;
   display: flex; align-items: center; gap: 6px;
 }
@@ -428,9 +428,9 @@ body[data-theme="light"] .grid-stack-placeholder > .placeholder-content { backgr
   .header-right { width: 100%; justify-content: space-between; }
   .alert-banner { margin: 0 16px 4px; }
   .grid-stack { width: calc(100% - 24px); padding: 0 0 24px; }
-  .weather-hero-icon { font-size: 56px; }
-  .weather-hero-temp { font-size: 44px; }
-  .weather-hero-temp .temp-unit { font-size: 20px; }
+  .weather-hero-icon { font-size: 60px; }
+  .weather-hero-temp { font-size: 50px; }
+  .weather-hero-temp .temp-unit { font-size: 22px; }
   .holiday-card-content { gap: 20px; }
   .holiday-upcoming { border-left: none; border-top: 1px solid rgba(255,255,255,0.08); padding-left: 0; padding-top: 14px; }
   .edit-toolbar { left: 12px; right: 12px; bottom: 12px; transform: none; border-radius: 16px; justify-content: center; flex-wrap: wrap; }
@@ -647,7 +647,7 @@ body[data-theme="light"] .grid-stack-placeholder > .placeholder-content { backgr
       <h3>顯示</h3>
       <div class="settings-option">
         <label>稱呼</label>
-        <input type="text" id="setting-name" placeholder="Marco" style="width:120px">
+        <input type="text" id="setting-name" placeholder="Marco" style="width:130px">
       </div>
       <div class="settings-option">
         <label>溫度單位</label>
@@ -803,8 +803,8 @@ function applySettings(){
     root.setProperty('--card-border','rgba(0,0,0,0.08)');
     root.setProperty('--card-hover','rgba(255,255,255,0.8)');
     root.setProperty('--text-primary','rgba(0,0,0,0.85)');
-    root.setProperty('--text-secondary','rgba(0,0,0,0.55)');
-    root.setProperty('--text-tertiary','rgba(0,0,0,0.35)');
+    root.setProperty('--text-secondary','rgba(0,0,0,0.58)');
+    root.setProperty('--text-tertiary','rgba(0,0,0,0.38)');
   } else {
     root.setProperty('--bg-gradient-start','#1a1a2e');
     root.setProperty('--bg-gradient-end','#16213e');
@@ -812,8 +812,8 @@ function applySettings(){
     root.setProperty('--card-border','rgba(255,255,255,0.12)');
     root.setProperty('--card-hover','rgba(255,255,255,0.12)');
     root.setProperty('--text-primary','rgba(255,255,255,0.95)');
-    root.setProperty('--text-secondary','rgba(255,255,255,0.6)');
-    root.setProperty('--text-tertiary','rgba(255,255,255,0.4)');
+    root.setProperty('--text-secondary','rgba(255,255,255,0.62)');
+    root.setProperty('--text-tertiary','rgba(255,255,255,0.44)');
   }
   setupAutoRefresh();
 }
